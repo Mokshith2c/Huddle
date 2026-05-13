@@ -1046,7 +1046,7 @@ function VideoMeetComponent() {
                                             <input
                                                 ref={fileInputRef}
                                                 type="file"
-                                                accept=".jpg,.jpeg,.png,.pdf"
+                                                accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
                                                 className="hidden"
                                                 onChange={(e) => handleFileUpload(e.target.files?.[0])}
                                             />

@@ -16,12 +16,22 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-    const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+    const allowedTypes = [
+      "image/jpeg", 
+      "image/png", 
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "text/plain"
+    ];
 
     if(allowedTypes.includes(file.mimetype)){
         cb(null, true);
     }else{
-        cb(new Error("Invalid file type. Only JPEG, PNG and PDF are allowed."), false);
+        cb(new Error("Invalid file type. Only JPEG, PNG, PDF, and Office documents are allowed."), false);
     }  
 };
 

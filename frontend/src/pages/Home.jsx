@@ -70,6 +70,15 @@ function Home() {
 		const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
 		window.open(whatsappUrl, "_blank", "noopener,noreferrer");
 	};
+
+	const generateMeetingCode = (len = 8) => {
+		const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+		let out = '';
+		for (let i = 0; i < len; i++) {
+			out += chars.charAt(Math.floor(Math.random() * chars.length));
+		}
+		return out;
+	};
 	return (
 		<div className="relative min-h-screen overflow-hidden bg-[linear-gradient(145deg,#020617_0%,#0b1220_56%,#0f172a_100%)] flex flex-col">
 			<div className=" absolute inset-0 bg-[radial-gradient(circle_at_78%_16%,rgba(34,211,238,0.12),transparent_38%)] opacity-70"></div>
@@ -228,12 +237,19 @@ function Home() {
 						<button
 							className="joinmeet-btn w-1/2"
 							onClick={async () => {
-								if (meetingCode.trim().length > 0) {
-									await addToUserHistory(meetingCode.trim());
-									navigate(`/${meetingCode.trim()}`)
+								let code = meetingCode.trim();
+								if (mode === 1 && code.length === 0) {
+									code = generateMeetingCode();
 								}
-							}
-							}
+								if (code.length > 0) {
+									await addToUserHistory(code);
+									setShowModal(false);
+									setMode(-1);
+									navigate(`/${code}`);
+								} else {
+									if (typeof showToast === 'function') showToast('Enter meeting code', 3000, 'error');
+								}
+							}}
 						>
 							{mode === 0 ? "Join Meeting" : "Create Meeting"}
 						</button>
