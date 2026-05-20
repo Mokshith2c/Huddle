@@ -242,7 +242,11 @@ function Home() {
 									code = generateMeetingCode();
 								}
 								if (code.length > 0) {
-									await addToUserHistory(code);
+									try {
+										await addToUserHistory(code);
+									} catch (err) {
+										console.error("Failed to add meeting to history", err);
+									}
 									setShowModal(false);
 									setMode(-1);
 									navigate(`/${code}`);

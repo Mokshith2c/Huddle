@@ -1,4 +1,5 @@
 import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
 
 
 let messages = {}
@@ -82,6 +83,21 @@ export const connectToSocket = (server) => {
             credentials: true
         }
     });
+
+    io.use((socket, next) => {
+        const token = socket.handshake.auth.token;
+        if (!token) {
+            return next(new Error("Authentication error: No token provided"));
+        }
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            socket.user = decoded;
+            next();
+        } catch (err) {
+            return next(new Error("Authentication error: Invalid token"));
+        }
+    });
+
     io.on('connection', (socket)=>{
         console.log("Something Connected");
         socket.on('join-call', async (path, username)=>{
@@ -130,6 +146,8 @@ export const connectToSocket = (server) => {
             const roomId = socket.data.roomPath;
             if(!roomId)return;
 
+            stroke.socketId = socket.id;
+
             if(!whiteboardState[roomId]){
                 whiteboardState[roomId] = [];
             }
@@ -154,13 +172,22 @@ export const connectToSocket = (server) => {
             if(!history || history.length === 0)return;
             if (!redoState[roomId]) redoState[roomId] = []
 
-            const lastStroke = history.pop();
-            redoState[roomId].push(lastStroke);
-            if (redoState[roomId].length > 1000) {
-                redoState[roomId].shift();
+            let strokeIndex = -1;
+            for (let i = history.length - 1; i >= 0; i--) {
+                if (history[i].socketId === socket.id) {
+                    strokeIndex = i;
+                    break;
+                }
             }
-            io.to(roomId).emit("whiteboard-update", [...history]);
 
+            if (strokeIndex !== -1) {
+                const removedStroke = history.splice(strokeIndex, 1)[0];
+                redoState[roomId].push(removedStroke);
+                if (redoState[roomId].length > 1000) {
+                    redoState[roomId].shift();
+                }
+                io.to(roomId).emit("whiteboard-update", history);
+            }
         })
         socket.on("whiteboard-redo", () => {
             const roomId = socket.data.roomPath;
@@ -175,11 +202,19 @@ export const connectToSocket = (server) => {
 
             if (!redoStack || redoStack.length === 0) return;
 
-            const stroke = redoStack.pop();
+            let strokeIndex = -1;
+            for (let i = redoStack.length - 1; i >= 0; i--) {
+                if (redoStack[i].socketId === socket.id) {
+                    strokeIndex = i;
+                    break;
+                }
+            }
 
-            history.push(stroke);
-
-            io.to(roomId).emit("whiteboard-update", history);
+            if (strokeIndex !== -1) {
+                const stroke = redoStack.splice(strokeIndex, 1)[0];
+                history.push(stroke);
+                io.to(roomId).emit("whiteboard-update", history);
+            }
         });
         socket.on("whiteboard-clear", () => {
             const roomId = socket.data.roomPath;

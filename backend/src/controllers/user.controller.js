@@ -9,10 +9,10 @@ import { Media } from "../models/media.model.js";
 
 dotenv.config();
 
-const generateToken = (username) => {
+const generateToken = (user) => {
     return jwt.sign(
         //payload
-        {username},
+        { username: user.username, _id: user._id },
         //secret
         process.env.JWT_SECRET,
         //options
@@ -38,7 +38,7 @@ const login = async(req, res) => {
             });
         }
         // let token = crypto.randomBytes(20).toString("hex");
-        let token = generateToken(username)
+        let token = generateToken(user);
 
         return res.status(httpStatus.OK).json({
             token: token,
@@ -53,7 +53,7 @@ const register = async (req, res) => {
     try{
         const existingUser = await User.findOne({username});
         if(existingUser){
-            return res.status(httpStatus.FOUND).json({message: "User already exists"})
+            return res.status(httpStatus.CONFLICT).json({message: "User already exists"})
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -64,7 +64,7 @@ const register = async (req, res) => {
         }); 
 
         await newUser.save();
-        const token = generateToken(username);
+        const token = generateToken(newUser);
         res.status(httpStatus.CREATED).json({
             token: token,
             message: "User Registered Successfully"

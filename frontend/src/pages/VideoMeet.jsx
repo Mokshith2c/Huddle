@@ -357,8 +357,16 @@ function VideoMeetComponent() {
                 .catch((e) => console.log(e));
         } else {
             try {
-                let tracks = localVideoRef.current.srcObject?.getTracks?.() || [];
+                let tracks = localVideoRef.current?.srcObject?.getTracks?.() || [];
                 tracks.forEach(track => track.stop())
+
+                const emptyStream = new MediaStream([black(), silence()]);
+                window.localStream = emptyStream;
+                if (localVideoRef.current) {
+                    localVideoRef.current.srcObject = emptyStream;
+                }
+                
+                replaceTracksForAllConnections(emptyStream);
             } catch (e) {
                 console.log(e);
             }
@@ -465,7 +473,13 @@ function VideoMeetComponent() {
         }
     }
     let connectToSocketServer = () => {
-        socketRef.current = io.connect(server_url)
+        if (socketRef.current && socketRef.current.connected) return;
+        const token = localStorage.getItem("token");
+        socketRef.current = io.connect(server_url, {
+            auth: {
+                token: token
+            }
+        });
         socketRef.current.on("signal", gotMessageFromServer);
         socketRef.current.on("connect", () => {
             const safeUsername =
@@ -554,48 +568,49 @@ function VideoMeetComponent() {
     }
 
     const toggleVideoBtn = () => {
-        setVideo(prev => {
-            const newState = !prev;
-
-            if (!newState) {
-                // VIDEO OFF
-                const currentVideoTracks = window.localStream?.getVideoTracks?.() || [];
-                const currentAudioTrack = window.localStream?.getAudioTracks?.()[0] || null;
-                const outgoingTracks = [];
-
-                if (audio && currentAudioTrack) {
-                    outgoingTracks.push(currentAudioTrack);
-                } else {
-                    outgoingTracks.push(silence());
-                }
-
-                const audioOnlyStream = new MediaStream(outgoingTracks);
-
-                window.localStream = audioOnlyStream;
-                if (localVideoRef.current) {
-                    localVideoRef.current.srcObject = audioOnlyStream;
-                }
-
-                replaceTracksForAllConnections(audioOnlyStream);
-
-                currentVideoTracks.forEach((track) => {
-                    try {
-                        track.stop();
-                    } catch (e) {
-                        console.log(e);
-                    }
+        if (!video) {
+            // VIDEO ON
+            navigator.mediaDevices.getUserMedia({ video: true, audio: audio })
+                .then((stream) => {
+                    getUserMediaSuccess(stream);
+                    setVideo(true);
+                    broadcastVideoState(true);
+                })
+                .catch((e) => {
+                    console.log("Failed to start video:", e);
                 });
+        } else {
+            // VIDEO OFF
+            const currentVideoTracks = window.localStream?.getVideoTracks?.() || [];
+            const currentAudioTrack = window.localStream?.getAudioTracks?.()[0] || null;
+            const outgoingTracks = [];
+
+            if (audio && currentAudioTrack) {
+                outgoingTracks.push(currentAudioTrack);
             } else {
-                // VIDEO ON
-                navigator.mediaDevices.getUserMedia({ video: true, audio: audio })
-                    .then(getUserMediaSuccess)
-                    .catch(console.log);
+                outgoingTracks.push(silence());
             }
 
-            broadcastVideoState(newState);
+            const audioOnlyStream = new MediaStream(outgoingTracks);
 
-            return newState;
-        });
+            window.localStream = audioOnlyStream;
+            if (localVideoRef.current) {
+                localVideoRef.current.srcObject = audioOnlyStream;
+            }
+
+            replaceTracksForAllConnections(audioOnlyStream);
+
+            currentVideoTracks.forEach((track) => {
+                try {
+                    track.stop();
+                } catch (e) {
+                    console.log(e);
+                }
+            });
+
+            setVideo(false);
+            broadcastVideoState(false);
+        }
     };
 
     const toggleScreenBtn = async () => {
