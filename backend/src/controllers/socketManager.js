@@ -71,6 +71,7 @@ let roomStartTimes = {}
 const allowedOrigins = [
     process.env.FRONTEND_URL,
     process.env.FRONTEND_TEST_URL,
+    "http://localhost:5173",
     "https://huddlemeet.tech",
     "https://www.huddlemeet.tech"
 ].filter(Boolean);

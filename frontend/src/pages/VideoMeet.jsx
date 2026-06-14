@@ -12,11 +12,17 @@ import WhiteBoard from '../components/WhiteBoard.jsx';
 import MeetingTimer from '../components/MeetingTimer.jsx';
 import withAuth from '../utils/withAuth.jsx';
 import { AuthContext } from '../contexts/AuthContext.jsx';
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMapPin } from '@fortawesome/free-solid-svg-icons';
+
 
 const backendHost = import.meta.env.VITE_BACKEND_HOST || window.location.hostname;
 const backendPort = import.meta.env.VITE_BACKEND_PORT || "5000";
 const backendProtocol = import.meta.env.VITE_BACKEND_PROTOCOL || "http";
 const server_url = `${backendProtocol}://${backendHost}:${backendPort}`;
+const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
 var connections = {}
 var pendingCandidates = {}
 // connections = {
@@ -30,6 +36,70 @@ const peerConnectionConfig = {
     ]
 }
 
+const getMapboxContext = (context, type) =>
+    context?.find((item) => item.id?.startsWith(`${type}.`))?.text || null;
+
+const parseMapboxGeocode = (features) => {
+    if (!features?.length) {
+        return { placeName: null, city: null, country: null };
+    }
+
+    const primary = features[0];
+    const context = primary.context || [];
+
+    const country =
+        getMapboxContext(context, "country") ||
+        features.find((feature) => feature.place_type?.includes("country"))?.text ||
+        null;
+
+    const city =
+        getMapboxContext(context, "place") ||
+        features.find((feature) => feature.place_type?.includes("place"))?.text ||
+        null;
+
+    const neighborhood =
+        getMapboxContext(context, "neighborhood") ||
+        features.find((feature) => feature.place_type?.includes("neighborhood"))?.text ||
+        null;
+
+    const locality =
+        getMapboxContext(context, "locality") ||
+        features.find((feature) => feature.place_type?.includes("locality"))?.text ||
+        null;
+
+    const poi = features.find((feature) => feature.place_type?.includes("poi"))?.text || null;
+
+    const street =
+        primary.place_type?.includes("address") ? primary.text : null;
+
+    let placeName = neighborhood || locality || poi || street || primary.text || null;
+
+    if (placeName && city && placeName === city) {
+        placeName = neighborhood || locality || street || primary.text || null;
+    }
+
+    return { placeName, city, country };
+};
+
+const buildLocationPayload = ({ latitude, longitude, accuracy, username, geocodeResult }) => {
+    const { placeName, city, country } = geocodeResult || {};
+    const roundedAccuracy = Number.isFinite(accuracy) ? Math.round(accuracy) : null;
+    const coordinateLabel = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+
+    return {
+        type: "location",
+        lat: latitude,
+        lng: longitude,
+        placeName: placeName || null,
+        city: city || null,
+        country: country || null,
+        accuracy: roundedAccuracy,
+        label: placeName || coordinateLabel,
+        sharedBy: username,
+        sharedAt: Date.now()
+    };
+};
+
 function VideoMeetComponent() {
     const { addToUserHistory } = React.useContext(AuthContext);
     var socketRef = useRef();
@@ -39,7 +109,10 @@ function VideoMeetComponent() {
     const videoRef = useRef([]);
     const isSwitchingStreamRef = useRef(false);
     const showModalRef = useRef(false);
-
+    const mapContainerRef = useRef(null);
+    const mapRef = useRef(null);
+    const locationPreviewCloseTimer = useRef(null);
+    mapboxgl.accessToken = mapboxToken;
 
 
     let [videoAvailable, setVideoAvailable] = useState(true);
@@ -59,8 +132,12 @@ function VideoMeetComponent() {
     let [participantNames, setParticipantNames] = useState({});
     let [participantVideoState, setParticipantVideoState] = useState({});
     let [showInvite, setShowInvite] = useState(false);
+    let [selectedLocation, setSelectedLocation] = useState(null);
+    let [locationPreviewVisible, setLocationPreviewVisible] = useState(false);
+    let [sharingLocation, setSharingLocation] = useState(false);
     const [callStartedAt, setCallStartedAt] = useState(null);
     let [copied, setCopied] = useState(false);
+    let [coordsCopied, setCoordsCopied] = useState(false);
     let navigate = useNavigate();
 
     const { url: meetingCode } = useParams();
@@ -103,6 +180,134 @@ function VideoMeetComponent() {
 		const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
 		window.open(whatsappUrl, "_blank", "noopener,noreferrer");
 	};
+
+    const formatLocationHeading = (label) => {
+        const parts = (label || "")
+            .split(",")
+            .map((part) => part.replace(/\s+\d{5}(-\d{4})?$/, "").trim())
+            .filter(Boolean);
+
+        if (!parts.length) {
+            return { title: "Shared location", subtitle: "" };
+        }
+
+        const title = parts[0];
+        const subtitle = parts.length > 1
+            ? (parts.length >= 4 ? parts.slice(-3) : parts.slice(1)).join(", ")
+            : "";
+
+        return { title, subtitle };
+    };
+
+    const getLocationDisplay = (location) => {
+        if (!location) {
+            return { placeName: "Shared location", cityCountry: "", accuracyText: null };
+        }
+
+        const { placeName, city, country, label, lat, lng, accuracy } = location;
+        const fallback = formatLocationHeading(label);
+
+        const resolvedPlaceName =
+            placeName ||
+            fallback.title ||
+            (lat != null && lng != null ? `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}` : "Shared location");
+
+        const cityCountry = [city, country].filter(Boolean).join(", ") || fallback.subtitle;
+
+        return {
+            placeName: resolvedPlaceName,
+            cityCountry,
+            accuracyText: Number.isFinite(accuracy) && accuracy <= 1500 ? `Accuracy ±${Math.round(accuracy)}m` : null
+        };
+    };
+
+    const formatSharedTime = (timestamp) => {
+        if (!timestamp) return "Just now";
+
+        try {
+            return new Intl.DateTimeFormat(undefined, {
+                hour: "numeric",
+                minute: "2-digit",
+                day: "numeric",
+                month: "short"
+            }).format(new Date(timestamp));
+        } catch {
+            return "Just now";
+        }
+    };
+
+    const formatLocationCardTime = (timestamp) => {
+        if (!timestamp) return "Just now";
+
+        try {
+            const date = new Date(timestamp);
+            const datePart = new Intl.DateTimeFormat(undefined, {
+                day: "numeric",
+                month: "short"
+            }).format(date);
+            const timePart = new Intl.DateTimeFormat(undefined, {
+                hour: "numeric",
+                minute: "2-digit"
+            }).format(date);
+
+            return `${datePart} • ${timePart}`;
+        } catch {
+            return "Just now";
+        }
+    };
+
+    const openLocationPreview = (location) => {
+        if (locationPreviewCloseTimer.current) {
+            clearTimeout(locationPreviewCloseTimer.current);
+            locationPreviewCloseTimer.current = null;
+        }
+
+        setSelectedLocation(location);
+        setLocationPreviewVisible(false);
+
+        requestAnimationFrame(() => {
+            setLocationPreviewVisible(true);
+        });
+    };
+
+    const closeLocationPreview = () => {
+        setLocationPreviewVisible(false);
+        setCoordsCopied(false);
+
+        if (locationPreviewCloseTimer.current) {
+            clearTimeout(locationPreviewCloseTimer.current);
+        }
+
+        locationPreviewCloseTimer.current = setTimeout(() => {
+            setSelectedLocation(null);
+            locationPreviewCloseTimer.current = null;
+        }, 180);
+    };
+
+    const copyLocationCoordinates = async () => {
+        if (!selectedLocation) return;
+
+        const coordinatesText = `${selectedLocation.lat}, ${selectedLocation.lng}`;
+
+        try {
+            await navigator.clipboard.writeText(coordinatesText);
+            setCoordsCopied(true);
+            setTimeout(() => setCoordsCopied(false), 2000);
+        } catch (error) {
+            console.error("Copy coordinates failed", error);
+        }
+    };
+
+    const centerLocationMap = () => {
+        if (!mapRef.current || !selectedLocation) return;
+
+        mapRef.current.easeTo({
+            center: [selectedLocation.lng, selectedLocation.lat],
+            zoom: 14,
+            essential: true
+        });
+    };
+
     const broadcastVideoState = (isVideoOn) => {
         if (!socketRef.current?.connected) {
             return;
@@ -321,6 +526,53 @@ function VideoMeetComponent() {
         }
     }, [video, audio]);
 
+    useEffect(() => {
+        if (!selectedLocation || !mapContainerRef.current || !mapboxToken) return;
+
+        if (mapRef.current) {
+            mapRef.current.remove();
+            mapRef.current = null;
+        }
+
+        mapRef.current = new mapboxgl.Map({
+            container: mapContainerRef.current,
+            style: "mapbox://styles/mapbox/streets-v12",
+            center: [selectedLocation.lng, selectedLocation.lat],
+            zoom: 13
+        });
+
+        const markerElement = document.createElement("div");
+        markerElement.className = "relative flex h-11 w-11 items-center justify-center";
+        markerElement.innerHTML = `
+            <span class="absolute h-12 w-12 rounded-full bg-violet-500/20 animate-ping" style="animation-duration:2.8s"></span>
+            <span class="absolute h-10 w-10 rounded-full bg-violet-400/25 blur-sm"></span>
+            <span class="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-linear-to-br from-violet-400 to-fuchsia-500 text-white shadow-lg shadow-violet-500/40">
+                <i class="fa-solid fa-location-dot text-sm"></i>
+            </span>
+        `;
+
+        new mapboxgl.Marker({ element: markerElement, anchor: "bottom" })
+            .setLngLat([selectedLocation.lng, selectedLocation.lat])
+            .addTo(mapRef.current);
+
+        mapRef.current.addControl(new mapboxgl.NavigationControl(), "top-right");
+
+        return () => {
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+            }
+        };
+    }, [selectedLocation, mapboxToken]);
+
+    useEffect(() => {
+        return () => {
+            if (locationPreviewCloseTimer.current) {
+                clearTimeout(locationPreviewCloseTimer.current);
+            }
+        };
+    }, []);
+
 
     let getUserMediaSuccess = (stream) => {
         window.localStream = stream;
@@ -472,6 +724,84 @@ function VideoMeetComponent() {
             setNewMessages((prevMessages) => prevMessages + 1);
         }
     }
+    const handleShareLocation = () => {
+        if (!socketRef.current || !socketRef.current.connected) {
+            setMessages((prevMessages) => [
+                ...prevMessages,
+                { sender: "System", data: "Chat disconnected. Cannot share location." }
+            ]);
+            return;
+        }
+
+        if (!navigator.geolocation) {
+            setMessages((prevMessages) => [
+                ...prevMessages,
+                { sender: "System", data: "Geolocation not supported by your browser." }
+            ]);
+            return;
+        }
+
+        if (!mapboxToken) {
+            setMessages((prevMessages) => [
+                ...prevMessages,
+                { sender: "System", data: "Mapbox token is missing." }
+            ]);
+            return;
+        }
+
+        setSharingLocation(true);
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude, accuracy } = position.coords;
+                let geocodeResult = { placeName: null, city: null, country: null };
+
+                try {
+                    const response = await fetch(
+                        `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?types=address,poi,neighborhood,locality,place&access_token=${mapboxToken}`
+                    );
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        geocodeResult = parseMapboxGeocode(data.features);
+                    } else {
+                        console.error("Reverse geocoding failed:", response.status, response.statusText);
+                    }
+                } catch (error) {
+                    console.error("Reverse geocoding failed:", error);
+                }
+
+                const locationPayload = buildLocationPayload({
+                    latitude,
+                    longitude,
+                    accuracy,
+                    username,
+                    geocodeResult
+                });
+
+                socketRef.current.emit("chat-message", locationPayload, username);
+                setSharingLocation(false);
+            },
+            (error) => {
+                setSharingLocation(false);
+
+                let errorMsg = "Failed to get location.";
+                if (error.code === error.PERMISSION_DENIED) {
+                    errorMsg = "Location permission denied.";
+                } else if (error.code === error.POSITION_UNAVAILABLE) {
+                    errorMsg = "Location unavailable.";
+                } else if (error.code === error.TIMEOUT) {
+                    errorMsg = "Location request timed out.";
+                }
+
+                setMessages((prevMessages) => [
+                    ...prevMessages,
+                    { sender: "System", data: errorMsg }
+                ]);
+            },
+            { enableHighAccuracy: false, timeout: 10000 }
+        );
+    };
     let connectToSocketServer = () => {
         if (socketRef.current && socketRef.current.connected) return;
         const token = localStorage.getItem("token");
@@ -964,6 +1294,7 @@ function VideoMeetComponent() {
 
                                             const isOwn = item.sender === username;
                                             const isFile = typeof item.data === "object" && item.data.type === "file";
+                                            const isLocation = typeof item.data === "object" && item.data.type === "location";
 
                                             const isImage = isFile && item.data.url.match(/\.(jpg|jpeg|png|gif)$/i);
                                             const isPDF = isFile && item.data.url.match(/\.pdf$/i);
@@ -989,9 +1320,68 @@ function VideoMeetComponent() {
                                                         )}
 
                                                    
-                                                        {!isFile && (
+                                                        {!isFile && !isLocation && (
                                                             <p className="text-sm">{item.data}</p>
                                                         )}
+
+                                                        {isLocation && (() => {
+                                                            const locationDisplay = getLocationDisplay(item.data);
+
+                                                            return (
+                                                            <div className="w-full max-w-xs overflow-hidden rounded-2xl border border-slate-600/50 bg-slate-800/90 shadow-md">
+                                                                <div className="px-3 pt-3">
+                                                                    <div className="flex items-center gap-1 text-sm font-semibold text-white">
+                                                                        <span aria-hidden="true">
+                                                                            <FontAwesomeIcon icon={faMapPin} />
+                                                                        </span>
+                                                                        <span className="truncate">{locationDisplay.placeName}</span>
+                                                                    </div>
+                                                                    {locationDisplay.cityCountry && (
+                                                                        <p className="mt-1 truncate text-xs text-slate-300">
+                                                                            {locationDisplay.cityCountry}
+                                                                        </p>
+                                                                    )}
+                                                                    <div className="mt-1 font-medium text-xs text-blue-200">
+                                                                        Shared by <span className="font-medium text-slate-200">{item.sender}</span>
+                                                                    </div>
+                                                                    {locationDisplay.accuracyText && (
+                                                                        <div className="mt-1  text-xs text-slate-400">
+                                                                            {locationDisplay.accuracyText}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+
+                                                                {mapboxToken && (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => openLocationPreview(item.data)}
+                                                                        className="mt-3 block w-full overflow-hidden bg-slate-900/40 text-left"
+                                                                    >
+                                                                        <img
+                                                                            src={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-s+9c27b0(${item.data.lng},${item.data.lat})/${item.data.lng},${item.data.lat},13/560x280@2x?access_token=${mapboxToken}`}
+                                                                            alt="Location preview"
+                                                                            className="h-36 w-full object-cover"
+                                                                        />
+                                                                    </button>
+                                                                )}
+
+                                                                <div className="flex gap-2 p-3">
+                                                                    <button
+                                                                        onClick={() => openLocationPreview(item.data)}
+                                                                        className="flex-1 rounded-xl bg-sky-500 px-3 py-2 text-sm font-medium text-white transition hover:bg-sky-400"
+                                                                    >
+                                                                        Preview
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => window.open(`https://www.google.com/maps?q=${item.data.lat},${item.data.lng}`, "_blank")}
+                                                                        className="flex-1 rounded-xl bg-violet-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-violet-500"
+                                                                    >
+                                                                        Open
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            );
+                                                        })()}
 
        
                                                         {isFile && (
@@ -1041,6 +1431,91 @@ function VideoMeetComponent() {
                                                 </div>
                                             );
                                         })}
+                                        {selectedLocation && (() => {
+                                            const locationDisplay = getLocationDisplay(selectedLocation);
+
+                                            return (
+                                            <div className={`fixed inset-0 z-50 flex items-end justify-center bg-slate-950/75 p-3 backdrop-blur-sm transition-opacity duration-200 sm:items-center sm:p-4 ${locationPreviewVisible ? "opacity-100" : "opacity-0"}`}>
+                                                <div className={`relative flex w-full max-w-4xl max-h-[94vh] flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900/90 shadow-[0_24px_80px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-all duration-200 sm:rounded-3xl ${locationPreviewVisible ? "translate-y-0 scale-100 opacity-100" : "translate-y-2 scale-[0.98] opacity-0"}`}>
+                                                    <div className="flex items-start justify-between gap-4 border-b border-white/5 px-4 py-4 sm:px-6">
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex items-center gap-1 text-lg font-semibold leading-tight text-white sm:text-xl">
+                                                                <span aria-hidden="true">
+                                                                    <FontAwesomeIcon icon={faMapPin} />
+                                                                </span>
+                                                                <span className="truncate">{locationDisplay.placeName}</span>
+                                                            </div>
+                                                            {locationDisplay.cityCountry && (
+                                                                <p className="mt-1 truncate text-sm text-slate-400">
+                                                                    {locationDisplay.cityCountry}
+                                                                </p>
+                                                            )}
+                                                            <p className="mt-2 text-xs text-slate-400">
+                                                                Shared by <span className="font-medium text-slate-200">{selectedLocation.sharedBy || username}</span>
+                                                            </p>
+                                                            <p className="mt-1 text-xs text-slate-400">
+                                                                {formatSharedTime(selectedLocation.sharedAt)}
+                                                            </p>
+                                                        </div>
+                                                        <button
+                                                            onClick={closeLocationPreview}
+                                                            aria-label="Close location preview"
+                                                            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition-all duration-200 hover:bg-white/10 hover:text-white active:scale-95"
+                                                        >
+                                                            <i className="fa-solid fa-xmark"></i>
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="overflow-y-auto px-4 py-4 sm:px-6">
+                                                        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/50 p-1.5 shadow-inner">
+                                                            <div className="pointer-events-none absolute left-3 top-3 z-10 max-w-[min(18rem,calc(100%-1.5rem))] rounded-xl border border-white/10 bg-slate-900/80 p-3.5 shadow-lg backdrop-blur-md sm:left-4 sm:top-4 sm:max-w-xs sm:p-4">
+                                                                <p className="text-xs text-slate-400">
+                                                                    Shared by <span className="font-medium text-slate-200">{selectedLocation.sharedBy || username}</span>
+                                                                </p>
+                                                                <p className="mt-1.5 text-xs text-slate-400">
+                                                                    {formatLocationCardTime(selectedLocation.sharedAt)}
+                                                                </p>
+                                                                {locationDisplay.accuracyText && (
+                                                                    <p className="mt-1 text-xs text-slate-400">
+                                                                        {locationDisplay.accuracyText}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+
+                                                            <div
+                                                                ref={mapContainerRef}
+                                                                className="h-[48vh] min-h-[220px] w-full overflow-hidden rounded-xl sm:h-[56vh]"
+                                                            />
+                                                        </div>
+
+                                                        <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-stretch">
+                                                            <button
+                                                                onClick={() => window.open(`https://www.google.com/maps?q=${selectedLocation.lat},${selectedLocation.lng}`, "_blank")}
+                                                                className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-xl bg-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition-all duration-200 hover:bg-violet-500 hover:shadow-violet-500/35 active:scale-[0.98] sm:py-3.5"
+                                                            >
+                                                                <i className="fa-solid fa-arrow-up-right-from-square"></i>
+                                                                Open in Google Maps
+                                                            </button>
+                                                            <button
+                                                                onClick={copyLocationCoordinates}
+                                                                className={`inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-200 active:scale-[0.98] sm:w-auto sm:px-5 sm:py-3.5 ${coordsCopied ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300" : "border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 hover:text-white"}`}
+                                                            >
+                                                                <i className={coordsCopied ? "fa-solid fa-check" : "fa-regular fa-copy"}></i>
+                                                                {coordsCopied ? "Copied" : "Copy Coordinates"}
+                                                            </button>
+                                                            <button
+                                                                onClick={centerLocationMap}
+                                                                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-slate-200 transition-all duration-200 hover:bg-white/10 hover:text-white active:scale-[0.98] sm:w-auto sm:px-5 sm:py-3.5"
+                                                            >
+                                                                <i className="fa-solid fa-crosshairs"></i>
+                                                                Center Map
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            );
+                                        })()}
                                     </div>
                                     <div className="p-3 border-t border-slate-700/70 flex items-center gap-2 bg-slate-900">
                                         <InputField
@@ -1058,6 +1533,14 @@ function VideoMeetComponent() {
                                             >
                                                 <i className="fa-solid fa-upload"></i>
                                             </button>
+                                            <button
+                                                onClick={handleShareLocation}
+                                                disabled={sharingLocation}
+                                                className="size-10 shrink-0 rounded-4xl bg-purple-500  text-sm font-medium  text-white transition-all duration-200 ease-out hover:bg-purple-400 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                type="button"
+                                            >
+                                                <i className="fa-solid fa-location-dot"></i>
+                                            </button>
                                             <input
                                                 ref={fileInputRef}
                                                 type="file"
@@ -1072,10 +1555,12 @@ function VideoMeetComponent() {
                                             >
                                                 <i className="fa-solid fa-paper-plane"></i>
                                             </button>
+                                            
                                         </div>
                                     </div>
                                 </div>
                             )}
+
 
                         </div>
 
