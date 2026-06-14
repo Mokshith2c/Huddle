@@ -16,7 +16,7 @@ const LandingPage = () => {
     }, 600);
   };
   const backendHost = import.meta.env.VITE_BACKEND_HOST || window.location.hostname;
-  const backendPort = import.meta.env.VITE_BACKEND_PORT || "8080";
+  const backendPort = import.meta.env.VITE_BACKEND_PORT || "5000";
   const backendProtocol = import.meta.env.VITE_BACKEND_PROTOCOL || "http";
   const server_url = `${backendProtocol}://${backendHost}:${backendPort}`;
   useEffect(() => {

@@ -12,7 +12,8 @@ dotenv.config();
 const app = express();
 const server = createServer(app);
 const io = connectToSocket(server);
-app.set("port", (process.env.PORT || 8080));
+const port = process.env.PORT || 5000;
+app.set("port", port);
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   process.env.FRONTEND_TEST_URL,
@@ -58,12 +59,22 @@ app.get("/home", (req, res) => {
 });
 
 const start = async () => {
-  const connectionDb = await mongoose.connect(process.env.MONGODB_URI)
-  console.log(`MONGO Connected DB Host: ${connectionDb.connection.host}`)
-  server.listen(app.get("port"), () => {
-    console.log("Listening on port 8080");
-  })
-  console.log("ENV FRONTEND_URL:", process.env.FRONTEND_URL);
+  if (!process.env.MONGODB_URI) {
+    throw new Error("MONGODB_URI is not set");
+  }
+
+  try {
+    const connectionDb = await mongoose.connect(process.env.MONGODB_URI)
+    console.log(`MONGO Connected DB Host: ${connectionDb.connection.host}`)
+    server.listen(port, () => {
+      console.log(`Listening on port ${port}`)
+    })
+    console.log("ENV FRONTEND_URL:", process.env.FRONTEND_URL)
+  } catch (error) {
+    console.error("MongoDB connection failed. Verify the Atlas URI and IP access list.")
+    throw error
+  }
 }
 
 start();
+console.log("Allowed Origins:", allowedOrigins);

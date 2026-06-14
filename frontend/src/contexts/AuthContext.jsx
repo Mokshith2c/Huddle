@@ -5,7 +5,7 @@ import { createContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const backendHost = import.meta.env.VITE_BACKEND_HOST || window.location.hostname;
-const backendPort = import.meta.env.VITE_BACKEND_PORT || "8080";
+const backendPort = import.meta.env.VITE_BACKEND_PORT || "5000";
 const backendProtocol = import.meta.env.VITE_BACKEND_PROTOCOL || "http";
 
 export const AuthContext = createContext({});
