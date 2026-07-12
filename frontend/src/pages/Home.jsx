@@ -98,7 +98,7 @@ function Home() {
 					</button>
 					<button className="logout-btn" onClick={handleLogout}>
 						<span>
-							<i className="fa-solid fa-right-from-bracket fa-sm pr-1"></i>
+							<i className="fa-solid fa-right-from-bracket pr-2"></i>
 							Logout
 						</span>
 					</button>

@@ -65,7 +65,7 @@ export default function ChatDrawer({
                                                 : "px-3 py-2  rounded-2xl rounded-bl-sm bg-[#212325]"
                                             : isOwn
                                                 ? "bg-[#5d5a55] text-white rounded-br-sm"
-                                                : "bg-[#212325] text-white "
+                                                : "bg-[#212325] text-white rounded-bl-sm"
                                     }
                                 `}
                             >
