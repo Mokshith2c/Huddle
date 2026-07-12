@@ -82,7 +82,7 @@ const getUserHistory = async(req, res) => {
     try{
         const username = req.user.username;
         const meetings = await Meeting.aggregate([
-            { $match: { user_id: username } },
+            { $match: { username: username } },
             { $sort: { date: -1 } },
             {
                 $group: {
@@ -119,7 +119,7 @@ const addToHistory = async(req, res) => {
         const meetingDate = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
 
         await Meeting.findOneAndUpdate(
-            { user_id: username, meetingCode: normalizedMeetingCode },
+            { username: username, meetingCode: normalizedMeetingCode },
             { $set: { date: meetingDate } },
             { upsert: true, new: true, setDefaultsOnInsert: true }
         );
@@ -132,7 +132,7 @@ const addToHistory = async(req, res) => {
 const getMediaHistory = async(req, res) => {
     try{
         const username = req.user.username;
-        const meetings = await Meeting.find({user_id: username});
+        const meetings = await Meeting.find({username: username});
         const meetingCodesFromHistory = meetings.map((m) => m.meetingCode);
         const meetingCodesFromUploads = await Media.distinct("meetingCode", {
             senderUsername: username

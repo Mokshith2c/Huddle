@@ -9,6 +9,7 @@ function WhiteBoard({ socket, width = 500, showWB }) {
   const drawingRef = useRef(false);
   const currentStrokeRef = useRef([]);
   const cursorCanvasRef = useRef(null);
+  const historyRef = useRef([]);
   const [color, setColor] = useState("#000000");
   const getPoint = (event) => {
     const canvas = canvasRef.current;
@@ -68,29 +69,8 @@ function WhiteBoard({ socket, width = 500, showWB }) {
       return;
     }
 
-    const cursorCanvas = cursorCanvasRef.current;
-    if (cursorCanvas) {
-      cursorCanvas.width = cursorCanvas.clientWidth;
-      cursorCanvas.height = cursorCanvas.clientHeight;
-    }
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      return;
-    }
-
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "#ffffff";
-    ctxRef.current = ctx;
-
     const handleUpdate = (history) => {
+      historyRef.current = history;
       redrawCanvas(history);
     };
 
@@ -101,6 +81,42 @@ function WhiteBoard({ socket, width = 500, showWB }) {
       socket.off("whiteboard-update", handleUpdate);
     }
   }, [socket]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        const { width, height } = entry.contentRect;
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const cursorCanvas = cursorCanvasRef.current;
+        if (cursorCanvas) {
+          cursorCanvas.width = cursorCanvas.clientWidth;
+          cursorCanvas.height = cursorCanvas.clientHeight;
+        }
+
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.lineCap = "round";
+          ctx.lineJoin = "round";
+          ctx.lineWidth = 3;
+          ctxRef.current = ctx;
+        }
+
+        redrawCanvas(historyRef.current);
+      }
+    });
+
+    resizeObserver.observe(canvas.parentElement || canvas);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   const startDrawing = (e) => {
     drawingRef.current = true;

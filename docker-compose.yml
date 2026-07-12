@@ -8,10 +8,17 @@ services:
       - ./backend/.env
   
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_BACKEND_HOST: ${VITE_BACKEND_HOST}
+        VITE_BACKEND_PORT: ${VITE_BACKEND_PORT}
+        VITE_BACKEND_PROTOCOL: ${VITE_BACKEND_PROTOCOL}
+        VITE_MAPBOX_TOKEN: ${VITE_MAPBOX_TOKEN}
     container_name: frontend
     ports:
       - "3000:3000"
-    
+    env_file:
+      - ./frontend/.env
     depends_on:
       - backend

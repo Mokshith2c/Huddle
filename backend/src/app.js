@@ -63,17 +63,17 @@ const start = async () => {
   if (!process.env.MONGODB_URI) {
     throw new Error("MONGODB_URI is not set");
   }
-
   try {
-    const connectionDb = await mongoose.connect(process.env.MONGODB_URI)
-    console.log(`MONGO Connected DB Host: ${connectionDb.connection.host}`)
+    const connectionDb = await mongoose.connect(process.env.MONGODB_URI);
+    console.log(`MONGO Connected DB Host: ${connectionDb.connection.host}`);
+    console.log(`MONGO Connected DB Name: ${connectionDb.connection.name}`);
     server.listen(port, () => {
-      console.log(`Listening on port ${port}`)
-    })
-    console.log("ENV FRONTEND_URL:", process.env.FRONTEND_URL)
+      console.log(`Listening on port ${port}`);
+    });
+    console.log("ENV FRONTEND_URL:", process.env.FRONTEND_URL);
   } catch (error) {
-    console.error("MongoDB connection failed. Verify the Atlas URI and IP access list.")
-    throw error
+    console.error("MongoDB connection failed. Verify the Atlas URI and IP access list.");
+    throw error;
   }
 }
 

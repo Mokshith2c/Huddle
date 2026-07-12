@@ -78,12 +78,13 @@ function History() {
                     </Link>
                 </div>
                 <div className="flex gap-4 md:gap-8 items-center text-white/90 flex-wrap md:flex-nowrap">
-                    <button className="transition-colors hover:text-cyan-200 text-sm md:text-base"
+                    <button className="transition-colors hover:text-cyan-200 text-base"
                         onClick={() => navigate('/home')}>
-                        <i className="fa-regular fa-house"></i>
+                        <i className="fa-solid fa-house"></i>
                         &nbsp;Home
                     </button>
-                    <button className="logout-btn text-sm" onClick={handleLogout}>
+                    <button className="logout-btn" onClick={handleLogout}>
+                        <i className="fa-solid fa-right-from-bracket pr-2"></i>
                         Logout
                     </button>
                 </div>

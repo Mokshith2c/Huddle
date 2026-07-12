@@ -96,8 +96,11 @@ function Home() {
 						<i className="fa-solid fa-clock-rotate-left"></i>
 						&nbsp;History
 					</button>
-					<button className="logout-btn text-sm" onClick={handleLogout}>
-						Logout
+					<button className="logout-btn" onClick={handleLogout}>
+						<span>
+							<i className="fa-solid fa-right-from-bracket fa-sm pr-1"></i>
+							Logout
+						</span>
 					</button>
 				</div>
 			</nav>

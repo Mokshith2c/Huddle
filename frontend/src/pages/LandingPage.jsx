@@ -49,7 +49,7 @@ const LandingPage = () => {
           className="md:hidden text-white text-2xl"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
-          ☰
+          <i className="fa-solid fa-bars"></i>
         </button>
 
         <div className="hidden md:flex gap-8 items-center text-white">
@@ -61,23 +61,35 @@ const LandingPage = () => {
               className="cursor-pointer hover:text-cyan-400 transition"
               onClick={handleGuestClick}
             >
-              Join as Guest
+              <span>
+                <i class="fa-solid fa-user-secret fa-sm" style={{color: "rgb(183, 187, 193)"}}></i>
+                Join as Guest
+              </span>
             </p>
 
             <p className="cursor-pointer hover:text-cyan-400 transition"
             onClick={()=>navigate('/auth')}>
-              Register
+              <span>
+                <i class="fa-solid fa-user-plus fa-sm pr-5" style={{color: "rgb(183, 187, 193)"}}></i>
+                Register
+              </span>
             </p>
 
             <Link to="/auth" className="login-btn">
-              Login
+              <span>
+                <i class="fa-solid fa-right-to-bracket fa-sm pr-2"></i>
+                Login
+              </span>
             </Link>
           </>
           )
           :
           (
           <button className="logout-btn" onClick={handleLogout}>
+            <span>
+              <i className="fa-solid fa-right-from-bracket fa-sm pr-1"></i>
               Logout
+            </span>
           </button>
           )
           }
@@ -85,31 +97,41 @@ const LandingPage = () => {
 
 
         {mobileMenuOpen && (
-          <div className="md:hidden absolute top-20 left-0 right-0 bg-slate-900/95 border-b border-cyan-500/30 p-4 flex flex-col gap-4 text-white mobile-menu">
+          <div className="md:hidden absolute z-20 top-20 left-0 right-0 bg-slate-900/95 border-b border-cyan-500/30 p-4 flex flex-col gap-4 text-white mobile-menu">
             {
             !localStorage.getItem("token")?
             (
             <>
               <p
-                className="cursor-pointer hover:text-cyan-400 transition"
+                className="cursor-pointer text-center hover:text-cyan-400 transition"
                 onClick={() => {
                   handleGuestClick();
                   setMobileMenuOpen(false);
                 }}
               >
+               <span>
+                <i class="fa-solid fa-user-secret fa-sm" style={{color: "rgb(183, 187, 193)"}}></i>
                 Join as Guest
+              </span>
               </p>
 
-              <p className="cursor-pointer hover:text-cyan-400 transition"
+              <p className="cursor-pointer text-center hover:text-cyan-400 transition"
               onClick={()=>{
                 navigate('/auth');
                 setMobileMenuOpen(false);
               }}>
-                Register
+                <span>
+                  <i class="fa-solid fa-user-plus fa-sm pr-5" style={{color: "rgb(183, 187, 193)"}}></i>
+                  Register
+                </span> 
               </p>
 
               <Link to="/auth" className="login-btn block text-center" onClick={() => setMobileMenuOpen(false)}>
+              
+              <span>
+                <i class="fa-solid fa-right-to-bracket fa-sm pr-1"></i>
                 Login
+              </span>
               </Link>
             </>
             )
@@ -119,7 +141,10 @@ const LandingPage = () => {
               handleLogout();
               setMobileMenuOpen(false);
             }}>
+              <span>
+                <i className="fa-solid fa-right-from-bracket fa-sm pr-1"></i>
                 Logout
+              </span>
             </button>
             )
             }
@@ -134,10 +159,13 @@ const LandingPage = () => {
           </p>
 
           <p className='mb-7 mt-3 text-xl text-gray-200'>
-            Cover a distance by <span className="text-cyan-400">huddle</span> ❤️
+            Cover a distance by <span className="text-cyan-400">huddle </span> 
+            <i class="fa-solid fa-heart fa-jello fa-sm" style={{color: "rgb(212, 67, 95)"}}></i>
           </p>
 
           <Link className="getstarted-btn" to="/home">
+            <i className="fa-solid fa-rocket"></i>
+            &nbsp;
             Get Started
           </Link>
         </div>
@@ -150,43 +178,58 @@ const LandingPage = () => {
       </div>
 
       <div className='mt-24 px-6 pb-16'>
-        <h2 className='text-center text-3xl font-bold text-white mb-12'>Why Choose Huddle?</h2>
+        <h2 className='text-center text-3xl font-bold text-white mb-12'>Why Choose Huddle<i class="fa-solid fa-question fa-sm fa-flip"></i></h2>
         <div className='grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto'>
           
           <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center hover:border-cyan-400/50 transition'>
-            <div className='text-4xl mb-3'>📹</div>
+            <div className='text-4xl mb-3'>
+              <i
+                className="fa-solid fa-video fa-float"
+                style={{ color: "rgb(183, 187, 193)" }}
+              ></i>
+            </div>
             <h3 className='text-white font-semibold mb-2'>HD Video Calls</h3>
             <p className='text-slate-400 text-sm'>Crystal clear video and audio for seamless meetings</p>
           </div>
 
           <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center hover:border-cyan-400/50 transition'>
-            <div className='text-4xl mb-3'>💬</div>
+            <div className='text-4xl mb-3'>
+              <i class="fa-solid fa-message fa-jello" style={{color: "rgb(183, 187, 193)"}}></i>
+            </div>
             <h3 className='text-white font-semibold mb-2'>Real-time Chat</h3>
             <p className='text-slate-400 text-sm'>Send instant messages alongside your video</p>
           </div>
 
           <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center hover:border-cyan-400/50 transition'>
-            <div className='text-4xl mb-3'>✏️</div>
+            <div className='text-4xl mb-3'>
+              <i class="fa-solid fa-pencil fa-swing" style={{color: "rgb(183, 187, 193)"}}></i>
+            </div>
             <h3 className='text-white font-semibold mb-2'>Whiteboard</h3>
             <p className='text-slate-400 text-sm'>Collaborate and draw together in real-time</p>
           </div>
 
           <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center hover:border-cyan-400/50 transition'>
-            <div className='text-4xl mb-3'>🖥️</div>
+            <div className='text-4xl mb-3'>
+              <i class="fa-solid fa-desktop fa-float" style={{color: "rgb(183, 187, 193)"}}></i>
+            </div>
             <h3 className='text-white font-semibold mb-2'>Screen Sharing</h3>
             <p className='text-slate-400 text-sm'>Share your screen instantly for better collaboration</p>
           </div>
           
           <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center hover:border-cyan-400/50 transition'>
-            <div className='text-4xl mb-3'>📱</div>
-            <h3 className='text-white font-semibold mb-2'>Easy to Use</h3>
-            <p className='text-slate-400 text-sm'>No downloads needed, just press call</p>
+            <div className='text-4xl mb-3'>
+              <i class="fa-solid fa-map-pin fa-wag" style={{color: "rgb(183, 187, 193)"}}></i>
+            </div>
+            <h3 className='text-white font-semibold mb-2'>Location Sharing</h3>
+            <p className='text-slate-400 text-sm'>Instantly share your location for better coordination.</p>
           </div>
 
           <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center hover:border-cyan-400/50 transition'>
-            <div className='text-4xl mb-3'>🔒</div>
-            <h3 className='text-white font-semibold mb-2'>Secure</h3>
-            <p className='text-slate-400 text-sm'>Your meetings are encrypted and private</p>
+            <div className='text-4xl mb-3'>
+              <i class="fa-solid fa-file fa-flip-360" style={{color: "rgb(183, 187, 193)"}}></i>
+            </div>
+            <h3 className='text-white font-semibold mb-2'>File Sharing</h3>
+            <p className='text-slate-400 text-sm'>Share documents, images, and files instantly during meetings.</p>
           </div>
 
 
