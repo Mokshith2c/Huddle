@@ -14,13 +14,16 @@ jobs:
     
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: backend
+
     strategy:
       matrix:
         node-version: [22]
     
     steps:
       
-      - name: Checkout Repository
         uses: action/checkout@v4
 
       - name: Setup Node.js
@@ -28,6 +31,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
+          cache-dependency-path: backend/package-lock.json
       
       - name: Install Dependencies
         run: npm ci
