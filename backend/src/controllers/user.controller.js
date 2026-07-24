@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 // import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { Media } from "../models/media.model.js";
+import { roomUsers } from "./socketManager.js";
 
 dotenv.config();
 
@@ -160,4 +161,15 @@ const getMediaHistory = async(req, res) => {
     }
 }
 
-export {login, register, logout, getUserHistory, addToHistory, getMediaHistory};
+const checkRoom = (req, res) => {
+    const code = req.params.code;
+    if (!code || typeof code !== "string" || !code.trim()) {
+        return res.status(httpStatus.BAD_REQUEST).json({ message: "Meeting code is required" });
+    }
+    const roomKey = code.trim();  // roomUsers stores keys WITHOUT a leading slash
+    const usersInRoom = roomUsers[roomKey];
+    const isActive = Boolean(usersInRoom && Object.keys(usersInRoom).length > 0);
+    return res.status(httpStatus.OK).json({ active: isActive, exists: isActive });
+};
+
+export {login, register, logout, getUserHistory, addToHistory, getMediaHistory, checkRoom};

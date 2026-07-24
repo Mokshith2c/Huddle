@@ -43,7 +43,7 @@ export default function useVideoMeet() {
     const pendingCandidatesRef = useRef({});
     const screenStreamRef = useRef(null);
 
-    // React State
+
     const [videoAvailable, setVideoAvailable] = useState(true);
     const [audioAvailable, setAudioAvailable] = useState(true);
     const [video, setVideo] = useState(false);
@@ -56,7 +56,16 @@ export default function useVideoMeet() {
     const [message, setMessage] = useState("");
     const [newMessages, setNewMessages] = useState(0);
     const [askForUsername, setAskForUsername] = useState(true);
-    const [username, setUsername] = useState("");
+    const [username, setUsername] = useState(() => {
+        const token = localStorage.getItem("token");
+        if (!token) return "";
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.username || "";
+        } catch {
+            return "";
+        }
+    });
     const [videos, setVideos] = useState([]);
     const [participantNames, setParticipantNames] = useState({});
     const [participantVideoState, setParticipantVideoState] = useState({});
@@ -387,7 +396,7 @@ export default function useVideoMeet() {
                 if (localVideoRef.current) {
                     localVideoRef.current.srcObject = emptyStream;
                 }
-                
+
                 replaceTracksForAllConnections(emptyStream);
             } catch (e) {
                 console.log(e);
@@ -476,9 +485,9 @@ export default function useVideoMeet() {
                                 connection.setLocalDescription(description).then(() => {
                                     socketRef.current.emit("signal", fromId, JSON.stringify({ "sdp": connection.localDescription }));
                                 })
-                                .catch(e => console.log(e));
+                                    .catch(e => console.log(e));
                             })
-                            .catch(e => console.log(e));
+                                .catch(e => console.log(e));
                         }
 
                         const queuedCandidates = pendingCandidatesRef.current[fromId] || [];
@@ -638,6 +647,13 @@ export default function useVideoMeet() {
             }
         });
         socketRef.current.on("signal", gotMessageFromServer);
+        socketRef.current.on("connect_error", (err) => {
+            console.error("Socket authentication/connection error:", err.message);
+            setMessages((prevMessages) => [
+                ...prevMessages,
+                { sender: "System", data: `Connection error: ${err.message}` }
+            ]);
+        });
         socketRef.current.on("connect", () => {
             const safeUsername =
                 typeof username === "string" && username.trim()
@@ -838,7 +854,14 @@ export default function useVideoMeet() {
     };
 
     const getMedia = () => {
-        if ((video && videoAvailable) || (audio && audioAvailable)) {
+        const currentTracks = localStreamRef.current?.getTracks?.() || [];
+        const hasLiveVideo = currentTracks.some((t) => t.kind === "video" && t.readyState === "live");
+        const hasLiveAudio = currentTracks.some((t) => t.kind === "audio" && t.readyState === "live");
+
+        const needsVideo = video && videoAvailable && !hasLiveVideo;
+        const needsAudio = audio && audioAvailable && !hasLiveAudio;
+
+        if (needsVideo || needsAudio) {
             navigator.mediaDevices.getUserMedia({ video: video && videoAvailable, audio: audio && audioAvailable })
                 .then(getUserMediaSuccess)
                 .catch((e) => console.log(e));

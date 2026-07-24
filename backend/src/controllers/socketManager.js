@@ -16,7 +16,7 @@ let timeOnline = {}
 //  "socket123": Date,
 //  "socket456": Date
 // }
-let roomUsers = {}
+export let roomUsers = {}
 // Ex:
 // roomUsers = {
 //  "/room1": {

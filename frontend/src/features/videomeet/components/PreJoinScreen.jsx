@@ -2,6 +2,7 @@ import React from "react";
 import InputField from "../../../components/InputField";
 
 export default function PreJoinScreen({
+    roomId,
     localVideoRef,
     video,
     setVideo,
@@ -16,6 +17,14 @@ export default function PreJoinScreen({
     return (
         <div className="h-screen w-screen flex items-center justify-center bg-[radial-gradient(circle_at_20%_10%,#16263a_0%,#0b1117_45%,#090e14_100%)] p-4">
             <div className="w-full max-w-md">
+                {roomId && (
+                    <div className="mb-4 text-center">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/30 bg-sky-950/60 px-3 py-1 text-xs font-medium text-sky-300 backdrop-blur-sm">
+                            <i className="fa-solid fa-video text-sky-400"></i>
+                            Meeting Code: <strong className="font-mono text-white">{roomId}</strong>
+                        </span>
+                    </div>
+                )}
                 <div className="relative mb-8 overflow-hidden rounded-2xl border-2 border-sky-400/50 bg-slate-900 shadow-2xl">
                     <video 
                         ref={localVideoRef} 

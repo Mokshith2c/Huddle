@@ -14,6 +14,7 @@ export default function VideoMeet() {
     if (meet.askForUsername) {
         return (
             <PreJoinScreen
+                roomId={meet.roomId}
                 localVideoRef={meet.localVideoRef}
                 video={meet.video}
                 setVideo={meet.setVideo}
