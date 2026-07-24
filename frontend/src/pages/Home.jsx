@@ -103,7 +103,6 @@ function Home() {
 		setIsAvailable(null);
 	};
 
-	// Debounced live check while typing (Create mode only)
 	useEffect(() => {
 		if (mode !== 1) return;
 		const code = meetingCode.trim();
