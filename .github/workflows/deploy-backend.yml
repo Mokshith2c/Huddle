@@ -1,0 +1,29 @@
+name: Deploy Backend to EC2
+
+on:
+  push:
+    branches:
+      - devops
+
+jobs:
+  deploy:
+    runs-on: 
+      - self-hosted
+      - backend
+
+    steps:
+      - name: Pull Latest Code
+        run: |
+          cd /home/ubuntu/huddle
+          git fetch origin
+          git reset --hard origin/devops
+
+      - name: Install Dependencies
+        run: |
+          cd /home/ubuntu/huddle/backend
+          npm ci
+
+      - name: Restart Backend
+        run: |
+          pm2 restart huddle
+          pm2 save
