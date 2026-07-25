@@ -12,9 +12,6 @@ jobs:
       - backend
 
     steps:
-      - name: Go to Project
-        run: cd /home/ubuntu/huddle
-
       - name: Pull Latest Code
         run: |
           cd /home/ubuntu/huddle
