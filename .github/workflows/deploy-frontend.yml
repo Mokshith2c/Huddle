@@ -10,8 +10,8 @@ on:
 jobs:
   deploy:
     runs-on:
-      -self-hosted
-      -huddle
+      - self-hosted
+      - huddle
     
     steps:
       - name: Pull Latest Code
