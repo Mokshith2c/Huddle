@@ -11,6 +11,7 @@ jobs:
   deploy:
     runs-on:
       -self-hosted
+      -huddle
     
     steps:
       - name: Pull Latest Code
