@@ -1,0 +1,33 @@
+name: Deploy Frontend
+on:
+  push:
+    branches:
+      - devops
+    paths:
+      - "frontend/**"
+      - ".github/workflows/deploy-frontend.yml"
+
+jobs:
+  deploy:
+    runs-on:
+      -self-hosted
+    
+    steps:
+      - name: Pull Latest Code
+        run: |
+          cd /home/ubuntu/huddle
+          git fetch origin 
+          git reset --hard origin/devops
+
+      - name: Install Dependencies
+        working-directory: /home/ubuntu/huddle/frontend
+        run: npm ci
+
+      - name: Build Frontend 
+        working-directory: /home/ubuntu/huddle/frontend
+        run: npm run build 
+
+      - name: Deploy Frontend
+        run: |
+          rm -rf /var/www/huddle/*
+          cp -r /home/ubuntu/huddle/frontend/dist/* /var/www/huddle/
