@@ -17,7 +17,7 @@ services:
         VITE_MAPBOX_TOKEN: ${VITE_MAPBOX_TOKEN}
     container_name: frontend
     ports:
-      - "5173:5173"
+      - "5173:80"
     env_file:
       - ./frontend/.env
     depends_on:
