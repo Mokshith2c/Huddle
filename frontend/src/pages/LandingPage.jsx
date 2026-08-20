@@ -62,7 +62,7 @@ const LandingPage = () => {
               onClick={handleGuestClick}
             >
               <span>
-                <i class="fa-solid fa-user-secret fa-sm" style={{color: "rgb(183, 187, 193)"}}></i>
+                <i className="fa-solid fa-user-secret fa-sm" style={{color: "rgb(183, 187, 193)"}}></i>
                 Join as Guest
               </span>
             </p>
@@ -70,14 +70,14 @@ const LandingPage = () => {
             <p className="cursor-pointer hover:text-cyan-400 transition"
             onClick={()=>navigate('/auth')}>
               <span>
-                <i class="fa-solid fa-user-plus fa-sm pr-5" style={{color: "rgb(183, 187, 193)"}}></i>
+                <i className="fa-solid fa-user-plus fa-sm pr-5" style={{color: "rgb(183, 187, 193)"}}></i>
                 Register
               </span>
             </p>
 
             <Link to="/auth" className="login-btn">
               <span>
-                <i class="fa-solid fa-right-to-bracket fa-sm pr-2"></i>
+                <i className="fa-solid fa-right-to-bracket fa-sm pr-2"></i>
                 Login
               </span>
             </Link>
@@ -110,7 +110,7 @@ const LandingPage = () => {
                 }}
               >
                <span>
-                <i class="fa-solid fa-user-secret fa-sm" style={{color: "rgb(183, 187, 193)"}}></i>
+                <i className="fa-solid fa-user-secret fa-sm" style={{color: "rgb(183, 187, 193)"}}></i>
                 Join as Guest
               </span>
               </p>
@@ -121,7 +121,7 @@ const LandingPage = () => {
                 setMobileMenuOpen(false);
               }}>
                 <span>
-                  <i class="fa-solid fa-user-plus fa-sm pr-5" style={{color: "rgb(183, 187, 193)"}}></i>
+                  <i className="fa-solid fa-user-plus fa-sm pr-5" style={{color: "rgb(183, 187, 193)"}}></i>
                   Register
                 </span> 
               </p>
@@ -129,7 +129,7 @@ const LandingPage = () => {
               <Link to="/auth" className="login-btn block text-center" onClick={() => setMobileMenuOpen(false)}>
               
               <span>
-                <i class="fa-solid fa-right-to-bracket fa-sm pr-1"></i>
+                <i className="fa-solid fa-right-to-bracket fa-sm pr-1"></i>
                 Login
               </span>
               </Link>
@@ -160,7 +160,7 @@ const LandingPage = () => {
 
           <p className='mb-7 mt-3 text-xl text-gray-200'>
             Cover a distance by <span className="text-cyan-400">huddle </span> 
-            <i class="fa-solid fa-heart fa-jello fa-sm" style={{color: "rgb(212, 67, 95)"}}></i>
+            <i className="fa-solid fa-heart fa-jello fa-sm" style={{color: "rgb(212, 67, 95)"}}></i>
           </p>
 
           <Link className="getstarted-btn" to="/home">
@@ -171,14 +171,14 @@ const LandingPage = () => {
         </div>
 
         <img
-          src="/huddle.svg"
+          src="/huddle-rec.svg"
           alt="app preview"
           className="w-full max-w-120 lg:h-120 lg:w-130"
         />
       </div>
 
       <div className='mt-24 px-6 pb-16'>
-        <h2 className='text-center text-3xl font-bold text-white mb-12'>Why Choose Huddle<i class="fa-solid fa-question fa-sm fa-flip"></i></h2>
+        <h2 className='text-center text-3xl font-bold text-white mb-12'>Why Choose Huddle<i className="fa-solid fa-question fa-sm fa-flip"></i></h2>
         <div className='grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto'>
           
           <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center hover:border-cyan-400/50 transition'>
@@ -194,7 +194,7 @@ const LandingPage = () => {
 
           <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center hover:border-cyan-400/50 transition'>
             <div className='text-4xl mb-3'>
-              <i class="fa-solid fa-message fa-jello" style={{color: "rgb(183, 187, 193)"}}></i>
+              <i className="fa-solid fa-message fa-jello" style={{color: "rgb(183, 187, 193)"}}></i>
             </div>
             <h3 className='text-white font-semibold mb-2'>Real-time Chat</h3>
             <p className='text-slate-400 text-sm'>Send instant messages alongside your video</p>
@@ -202,7 +202,7 @@ const LandingPage = () => {
 
           <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center hover:border-cyan-400/50 transition'>
             <div className='text-4xl mb-3'>
-              <i class="fa-solid fa-pencil fa-swing" style={{color: "rgb(183, 187, 193)"}}></i>
+              <i className="fa-solid fa-pencil fa-swing" style={{color: "rgb(183, 187, 193)"}}></i>
             </div>
             <h3 className='text-white font-semibold mb-2'>Whiteboard</h3>
             <p className='text-slate-400 text-sm'>Collaborate and draw together in real-time</p>
@@ -210,7 +210,7 @@ const LandingPage = () => {
 
           <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center hover:border-cyan-400/50 transition'>
             <div className='text-4xl mb-3'>
-              <i class="fa-solid fa-desktop fa-float" style={{color: "rgb(183, 187, 193)"}}></i>
+              <i className="fa-solid fa-desktop fa-float" style={{color: "rgb(183, 187, 193)"}}></i>
             </div>
             <h3 className='text-white font-semibold mb-2'>Screen Sharing</h3>
             <p className='text-slate-400 text-sm'>Share your screen instantly for better collaboration</p>
@@ -218,7 +218,7 @@ const LandingPage = () => {
           
           <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center hover:border-cyan-400/50 transition'>
             <div className='text-4xl mb-3'>
-              <i class="fa-solid fa-map-pin fa-wag" style={{color: "rgb(183, 187, 193)"}}></i>
+              <i className="fa-solid fa-map-pin fa-wag" style={{color: "rgb(183, 187, 193)"}}></i>
             </div>
             <h3 className='text-white font-semibold mb-2'>Location Sharing</h3>
             <p className='text-slate-400 text-sm'>Instantly share your location for better coordination.</p>
@@ -226,7 +226,7 @@ const LandingPage = () => {
 
           <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center hover:border-cyan-400/50 transition'>
             <div className='text-4xl mb-3'>
-              <i class="fa-solid fa-file fa-flip-360" style={{color: "rgb(183, 187, 193)"}}></i>
+              <i className="fa-solid fa-file fa-flip-360" style={{color: "rgb(183, 187, 193)"}}></i>
             </div>
             <h3 className='text-white font-semibold mb-2'>File Sharing</h3>
             <p className='text-slate-400 text-sm'>Share documents, images, and files instantly during meetings.</p>
