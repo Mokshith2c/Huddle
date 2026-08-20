@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
-
+import dotenv from "dotenv";
+dotenv.config();
 
 let messages = {}
 // Ex: 
@@ -98,14 +99,14 @@ export const connectToSocket = (server) => {
         }
     });
 
-    io.on('connection', (socket)=>{
+    io.on('connection', (socket) => {
         console.log("Something Connected");
-        socket.on('join-call', async (path, username)=>{
+        socket.on('join-call', async (path, username) => {
             console.log(socket.data);
-            if(roomUsers[path] === undefined){
+            if (roomUsers[path] === undefined) {
                 roomUsers[path] = {}
             }
-            if(roomStartTimes[path] === undefined){
+            if (roomStartTimes[path] === undefined) {
                 roomStartTimes[path] = Date.now();
             }
 
@@ -122,10 +123,10 @@ export const connectToSocket = (server) => {
             const clientsInRoom = await io.in(path).fetchSockets();
             const clientIds = clientsInRoom.map((clientSocket) => clientSocket.id);
             io.to(path).emit("user-joined", socket.id, clientIds, roomUsers[path], roomStartTimes[path]);
-            
+
             //Send old messages to new user
-            if(messages[path] !== undefined){
-                for(let a=0; a<messages[path].length; a++){
+            if (messages[path] !== undefined) {
+                for (let a = 0; a < messages[path].length; a++) {
                     io.to(socket.id).emit('chat-message',
                         messages[path][a]['data'],
                         messages[path][a]['sender'],
@@ -138,20 +139,20 @@ export const connectToSocket = (server) => {
 
 
         //for WebRTC signaling,as WebRTC cannot directly start connection.
-        socket.on("signal", (toId, message)=>{
+        socket.on("signal", (toId, message) => {
             io.to(toId).emit("signal", socket.id, message);
         })
 
         socket.on("whiteboard-draw", (stroke) => {
             const roomId = socket.data.roomPath;
-            if(!roomId)return;
+            if (!roomId) return;
 
             stroke.socketId = socket.id;
 
-            if(!whiteboardState[roomId]){
+            if (!whiteboardState[roomId]) {
                 whiteboardState[roomId] = [];
             }
-            if(!redoState[roomId]){
+            if (!redoState[roomId]) {
                 redoState[roomId] = [];
             }
 
@@ -164,12 +165,12 @@ export const connectToSocket = (server) => {
             io.to(roomId).emit("whiteboard-update", whiteboardState[roomId]);
         })
 
-        socket.on("whiteboard-undo", ()=>{
+        socket.on("whiteboard-undo", () => {
             const roomId = socket.data.roomPath;
-            if(!roomId)return;
+            if (!roomId) return;
             if (!whiteboardState[roomId]) return;
             const history = whiteboardState[roomId];
-            if(!history || history.length === 0)return;
+            if (!history || history.length === 0) return;
             if (!redoState[roomId]) redoState[roomId] = []
 
             let strokeIndex = -1;
@@ -192,11 +193,11 @@ export const connectToSocket = (server) => {
         socket.on("whiteboard-redo", () => {
             const roomId = socket.data.roomPath;
             if (!roomId) return;
-            if(!whiteboardState[roomId]){
+            if (!whiteboardState[roomId]) {
                 whiteboardState[roomId] = [];
             }
             const history = whiteboardState[roomId];
-            
+
             if (!redoState[roomId]) redoState[roomId] = [];
             const redoStack = redoState[roomId];
 
@@ -218,7 +219,7 @@ export const connectToSocket = (server) => {
         });
         socket.on("whiteboard-clear", () => {
             const roomId = socket.data.roomPath;
-            if(!roomId)return;
+            if (!roomId) return;
             whiteboardState[roomId] = [];
             redoState[roomId] = [];
             io.to(roomId).emit("whiteboard-update", []);
@@ -234,7 +235,7 @@ export const connectToSocket = (server) => {
 
 
         //Triggered when someone sends chat.
-        socket.on("chat-message", (data, sender)=>{
+        socket.on("chat-message", (data, sender) => {
             const matchingRoom = socket.data.roomPath;
             const found = Boolean(matchingRoom);
 
@@ -249,33 +250,33 @@ export const connectToSocket = (server) => {
             //     }
             // }
 
-            if(found === true){
-                if(messages[matchingRoom] === undefined){
+            if (found === true) {
+                if (messages[matchingRoom] === undefined) {
                     messages[matchingRoom] = []
                 }
 
                 // Store the message in memory
-                messages[matchingRoom].push({'sender':sender, 'data': data, 'socket-id-sender':socket.id});
-                console.log("message", matchingRoom , ":", sender, data);
+                messages[matchingRoom].push({ 'sender': sender, 'data': data, 'socket-id-sender': socket.id });
+                console.log("message", matchingRoom, ":", sender, data);
 
                 // Send the message to everyone in the room
                 io.to(matchingRoom).emit('chat-message', data, sender, socket.id);
             }
-            
+
         })
 
 
         // Runs automatically when user: closes browser, loses internet, leaves meeting
-        socket.on('disconnect', async ()=>{
+        socket.on('disconnect', async () => {
             var diffTime = Math.abs((timeOnline[socket.id] || new Date()) - new Date());
             const key = socket.data.roomPath;
 
-            if(key){
+            if (key) {
                 io.to(key).emit('user-left', socket.id);
                 delete roomUsers[key]?.[socket.id];
 
                 const clientsInRoom = await io.in(key).fetchSockets();
-                if(clientsInRoom.length === 0){
+                if (clientsInRoom.length === 0) {
                     delete roomUsers[key]
                     delete roomStartTimes[key]
                     delete whiteboardState[key]

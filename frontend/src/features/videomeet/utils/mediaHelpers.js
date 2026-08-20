@@ -16,3 +16,5 @@ export const black = ({ width = 640, height = 480 } = {}) => {
     let stream = canvas.captureStream();
     return Object.assign(stream.getVideoTracks()[0], { enabled: false });
 };
+
+export const createEmptyStream = () => new MediaStream([black(), silence()]);

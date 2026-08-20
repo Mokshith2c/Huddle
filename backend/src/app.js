@@ -11,8 +11,8 @@ dotenv.config();
 
 const app = express();
 const server = createServer(app);
-const io = connectToSocket(server);
 const port = process.env.PORT || 5000;
+connectToSocket(server);
 app.set("port", port);
 const allowedOrigins = [
   process.env.FRONTEND_URL,
