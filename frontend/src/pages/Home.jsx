@@ -24,7 +24,7 @@ function Home() {
 	const [isChecking, setIsChecking] = useState(false);
 	const [isAvailable, setIsAvailable] = useState(null); // null=unchecked, true=free, false=taken
 	const debounceRef = useRef(null);
-	const { addToUserHistory, showToast } = useContext(AuthContext);
+	const { addToUserHistory, showToast, handleLogout } = useContext(AuthContext);
 	const normalizedCode = meetingCode.trim();
 	const inviteLink = normalizedCode ? `${window.location.origin}/${encodeURIComponent(normalizedCode)}` : "";
 	const handleCreate = () => {
@@ -46,10 +46,6 @@ function Home() {
 		if (codeError) setCodeError("");
 		setIsAvailable(null);
 	}
-	const handleLogout = () => {
-		localStorage.removeItem("token");
-		navigate("/");
-	};
 
 	const handleCopyInvite = async () => {
 		if (!inviteLink) return;

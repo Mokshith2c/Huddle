@@ -4,7 +4,7 @@ import InputField from "./InputField";
 import * as React from "react";
 
 const SignUpForm = () => {
-  const { handleAuth, name, username, password, setName, setUsername, setPassword, showToast } = React.useContext(AuthContext);
+  const { handleAuth, name, username, password, setName, setUsername, setPassword, showToast, isSubmitting } = React.useContext(AuthContext);
   const [validationErrors, setValidationErrors] = useState({});
 
   const validateForm = () => {
@@ -60,9 +60,16 @@ const SignUpForm = () => {
       <InputField  placeholder="Full Name" onChange={handleFNameChange} value={name}/>
       <InputField placeholder="Username" type="text" onChange={handleNameChange} value={username}/>
       <InputField placeholder="Password" type="password" onChange={handlePassChange} value={password}/>
-      <button type="button" onClick={handleSignUp} className="w-full py-3 rounded-lg bg-linear-to-r from-sky-600 to-cyan-500 text-white font-medium text-sm hover:from-sky-500 hover:to-cyan-400 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(14,165,233,0.28)] active:translate-y-0 transition-all duration-200">
-        Sign Up
-      </button>
+      <button
+        type="button"
+        onClick={handleSignUp}
+        disabled={isSubmitting}
+        className="w-full py-3 rounded-lg bg-linear-to-r from-sky-600 to-cyan-500 text-white font-medium text-sm hover:from-sky-500 hover:to-cyan-400 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(14,165,233,0.28)] active:translate-y-0 transition-all duration-200 
+        disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none flex items-center justify-center gap-2"
+      >
+        {isSubmitting && <i className="fa-solid fa-spinner fa-spin"></i>}
+        {isSubmitting ? "Signing up..." : "Sign Up"}
+      </button> 
     </div>
   );
 };

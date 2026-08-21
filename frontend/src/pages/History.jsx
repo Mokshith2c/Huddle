@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import withAuth from '../utils/withAuth';
 
 function History() {
-    const { getHistoryOfUser, getMediaHistory } = useContext(AuthContext);
+    const { getHistoryOfUser, getMediaHistory, handleLogout } = useContext(AuthContext);
     const [meetings, setMeetings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -40,10 +40,6 @@ function History() {
 
         fetchHistory();
     }, [getHistoryOfUser, getMediaHistory]);
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        navigate("/");
-    };
 
     const handleDownload = async (url, filename) => {
         try {

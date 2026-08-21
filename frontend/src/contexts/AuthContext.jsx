@@ -11,7 +11,8 @@ const backendProtocol = import.meta.env.VITE_BACKEND_PROTOCOL || "http";
 export const AuthContext = createContext({});
 
 const client = axios.create({
-    baseURL: `${backendProtocol}://${backendHost}:${backendPort}/api/v1/users`
+    baseURL: `${backendProtocol}://${backendHost}:${backendPort}/api/v1/users`,
+    timeout: 30000
 });
 
 client.interceptors.request.use((config) => {
@@ -22,12 +23,18 @@ client.interceptors.request.use((config) => {
     return config;
 });
 
+const navigateRef = { current: null };
+
 client.interceptors.response.use(
     (response) => response,
     (error) => {
         if(error.response?.status === 401){
             localStorage.removeItem("token");
-            window.location.href = "/auth";
+            if (navigateRef.current) {
+                navigateRef.current("/auth");
+            } else {
+                window.location.href = "/auth";
+            }
         }
         return Promise.reject(error);
     }
@@ -36,6 +43,7 @@ client.interceptors.response.use(
 export const AuthProvider = ({ children }) => {
 
     const [isSignup, setIsSignup] = React.useState(false);
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [userData, setUserData] = useState(null);
     const [error, setError] = React.useState("");
     const [message, setMessage] = React.useState("");
@@ -47,6 +55,7 @@ export const AuthProvider = ({ children }) => {
     const [password, setPassword] = React.useState("");
 
     const navigate = useNavigate();
+    navigateRef.current = navigate;
 
     const showToast = (toastMessage, duration = 3000, type = "success") => {
         setMessage(toastMessage);
@@ -56,90 +65,90 @@ export const AuthProvider = ({ children }) => {
     };
 
     const handleRegister = async (name, username, password) => {
-        try {
+        let request = await client.post("/register", {
+            name,
+            username,
+            password
+        });
 
-            let request = await client.post("/register", {
-                name,
-                username,
-                password
-            });
-
-            if (request.status === httpStatus.CREATED) {
-                return request.data.message;
-            }
-
-        } catch (err) {
-            throw err;
+        if (request.status === httpStatus.CREATED) {
+            return request.data.message;
         }
     };
 
     const handleLogin = async (username, password) => {
-        console.log(username);
-        try {
+        let request = await client.post("/login", {
+            username,
+            password
+        });
 
-            let request = await client.post("/login", {
-                username,
-                password
-            });
-
-            if (request.status === httpStatus.OK) {
-                localStorage.setItem("token", request.data.token);
-                return request.data.message;
-            }
-
-        } catch (err) {
-            throw err;
+        if (request.status === httpStatus.OK) {
+            localStorage.setItem("token", request.data.token);
+            return request.data.message;
         }
     };
 
 
     const handleAuth = async () => {
-        try {
-            if(isSignup){
-                const signupResult = await handleRegister(name, username, password);
-                await handleLogin(username, password);
-                console.log(signupResult);
-                showToast(signupResult, 3000, "success");
-                setError("");
-                setName("");
-                setUsername("");
-                setPassword("");
-                setTimeout(() => navigate("/home"), 500);
+        if(isSubmitting)return;
+        setIsSubmitting(true)
+        try{
+            if (isSignup) {
+                let signupResult;
+                try {
+                    signupResult = await handleRegister(name, username, password);
+                } catch (err) {
+                    const message = err.response?.data?.message || "Something went wrong";
+                    showToast(message, 4000, "error");
+                    console.error("Registration error:", message);
+                    return;
+                }
+    
+                try {
+                    await handleLogin(username, password);
+                    showToast(signupResult, 3000, "success");
+                    setError("");
+                    setName("");
+                    setUsername("");
+                    setPassword("");
+                    setTimeout(() => navigate("/home"), 500);
+                } catch (err) {
+                    showToast("Account created. Please log in.", 4000, "success");
+                    setError("");
+                    setIsSignup(false);
+                    setPassword("");
+                    console.error("Post-signup login error:", err.response?.data?.message || err.message);
+                }
             } else {
-                const result = await handleLogin(username, password);
-                console.log(result);
-                showToast(result, 3000, "success");
-                setError("");
-                setUsername("");
-                setPassword("");
-                setTimeout(() => navigate("/home"), 500);
+                try {
+                    const result = await handleLogin(username, password);
+                    showToast(result, 3000, "success");
+                    setError("");
+                    setUsername("");
+                    setPassword("");
+                    setTimeout(() => navigate("/home"), 500);
+                } catch (err) {
+                    const message = err.response?.data?.message || "Something went wrong";
+                    showToast(message, 4000, "error");
+                    console.error("Login error:", message);
+                }
             }
-        } catch (err) {
-            let message = err.response?.data?.message || "Something went wrong";
-            showToast(message, 4000, "error");
-            console.error("Auth error:", message);
+        }finally{
+            setIsSubmitting(false);
         }
     };
 
     const getHistoryOfUser = async() => {
-        try{
-            let request = await client.get("/get_all_activity");
-            return request.data;
-        } catch (err){
-            throw err;
-        }
+        let request = await client.get("/get_all_activity");
+        return request.data;
     }
 
     const addToUserHistory = async(meetingCode) => {
-        try{
-            let request = await client.post("/add_to_activity", {
-                meeting_code: meetingCode,
-                date: Date.now()
-            });
-            return request;
-        } catch (e){
-            throw e;
-        }
+        let request = await client.post("/add_to_activity", {
+            meeting_code: meetingCode,
+            date: Date.now()
+        });
+        return request;
     }
 
     const handleLogout = async() => {
@@ -163,6 +172,7 @@ export const AuthProvider = ({ children }) => {
         handleLogin,
         handleAuth,
         handleLogout,
+        isSubmitting,
         userData,
         setUserData,
         error,

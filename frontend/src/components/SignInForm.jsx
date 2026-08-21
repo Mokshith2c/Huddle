@@ -4,7 +4,7 @@ import { AuthContext } from "../contexts/AuthContext";
 import { useContext, useState } from "react";
 
 const SignInForm = () => {
-  const { username, setUsername, password, setPassword, handleAuth, showToast } = useContext(AuthContext);
+  const { username, setUsername, password, setPassword, handleAuth, showToast , isSubmitting} = useContext(AuthContext);
   const [validationErrors, setValidationErrors] = useState({});
 
   const validateForm = () => {
@@ -50,9 +50,11 @@ const SignInForm = () => {
       <InputField placeholder="Username" type="text" value={username} onChange={handleNameChange}/>
       <InputField placeholder="Password" type="password" value={password} onChange={handlePassChange}/>
       
-      <button type="button" className="w-full py-3 rounded-lg bg-linear-to-r from-sky-600 to-cyan-500 text-white font-medium text-sm hover:from-sky-500 hover:to-cyan-400 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(14,165,233,0.28)] active:translate-y-0 transition-all duration-200"
-      onClick={handleSignIn}>
-        Sign In
+      <button type="button" className="w-full py-3 rounded-lg bg-linear-to-r from-sky-600 to-cyan-500 text-white font-medium text-sm hover:from-sky-500 hover:to-cyan-400 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(14,165,233,0.28)] active:translate-y-0 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none flex items-center justify-center gap-2"
+      onClick={handleSignIn}
+      disabled={isSubmitting}>
+        {isSubmitting && <i className="fa-solid fa-spinner fa-spin"></i>}
+        {isSubmitting ? "Signing in..." : "Sign In"}
       </button>
     </div>
   );
