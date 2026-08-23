@@ -276,6 +276,12 @@ export default function useVideoMeet() {
         if (localVideoRef.current) localVideoRef.current.srcObject = stream;
         if (notifyPeers) replaceTracksForAllConnections(stream);
     };
+    const attachLocalVideo = (node) => {
+        localVideoRef.current = node;
+        if (node && localStreamRef.current) {
+            node.srcObject = localStreamRef.current;
+        }
+    };
 
     const createAndSendOffer = (socketId) => {
         const connection = connectionsRef.current[socketId];
@@ -928,7 +934,8 @@ export default function useVideoMeet() {
         participantVideoState,
         getParticipantName,
         localVideoRef,
-
+        attachLocalVideo,
+        
         // Chat & Messaging
         messages,
         message,

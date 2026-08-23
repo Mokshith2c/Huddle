@@ -114,11 +114,11 @@ const addToHistory = async (req, res) => {
         const parsedDate = date ? new Date(date) : new Date();
         const meetingDate = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
 
-        await Meeting.findOneAndUpdate(
-            { username: username, meetingCode: normalizedMeetingCode },
-            { $set: { date: meetingDate } },
-            { upsert: true, new: true, setDefaultsOnInsert: true }
-        );
+        await Meeting.create({
+            username: username,
+            meetingCode: normalizedMeetingCode,
+            date: meetingDate
+        });
         res.status(httpStatus.CREATED).json({ message: "Meeting Added to history" })
     } catch (e) {
         res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Error: ${e.message}` });
@@ -161,6 +161,7 @@ const checkRoom = (req, res) => {
     if (!code || typeof code !== "string" || !code.trim()) {
         return res.status(httpStatus.BAD_REQUEST).json({ message: "Meeting code is required" });
     }
+    res.set("Cache-Control", "no-store");
     const roomKey = code.trim();
     const usersInRoom = roomUsers[roomKey];
     const isActive = Boolean(usersInRoom && Object.keys(usersInRoom).length > 0);

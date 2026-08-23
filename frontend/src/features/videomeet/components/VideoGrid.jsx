@@ -4,7 +4,7 @@ export default function VideoGrid({
     videos,
     participantVideoState,
     getParticipantName,
-    localVideoRef,
+    attachLocalVideo,
     video,
     screen,
     username
@@ -20,6 +20,16 @@ export default function VideoGrid({
 
                 return (
                     <div key={vid.socketId} className="relative h-full min-h-0 overflow-hidden rounded-xl border border-slate-700/40 bg-slate-900 shadow-lg">
+                        <audio
+                            autoPlay
+                            ref={(ref) => {
+                                if (!ref) return;
+                                if (vid.stream && ref.srcObject !== vid.stream) {
+                                    ref.srcObject = vid.stream;
+                                }
+                            }}
+                        />
+
                         {!isVideoOn ? (
                             <div className="h-full w-full flex items-center justify-center bg-slate-900">
                                 <div className="flex flex-col items-center">
@@ -33,19 +43,12 @@ export default function VideoGrid({
                                 key="video-on"
                                 autoPlay
                                 playsInline
+                                muted   // audio now comes from the <audio> tag above; avoid double playback
                                 className="h-full w-full object-cover"
                                 ref={(ref) => {
                                     if (!ref) return;
-
-                                    if (!isVideoOn) {
-                                        ref.srcObject = null;  
-                                        return;
-                                    }
-
-                                    if (vid.stream) {
-                                        if (ref.srcObject !== vid.stream) {
-                                            ref.srcObject = vid.stream;
-                                        }
+                                    if (vid.stream && ref.srcObject !== vid.stream) {
+                                        ref.srcObject = vid.stream;
                                     }
                                 }}
                             />
@@ -62,7 +65,7 @@ export default function VideoGrid({
             <div className="fixed bottom-22.5 h-32.5 w-50 overflow-hidden rounded-xl border-2 border-sky-400/90 bg-slate-900 shadow-xl">
                 {(video || screen) ? (
                     <video
-                        ref={localVideoRef}
+                        ref={attachLocalVideo}
                         autoPlay
                         muted
                         playsInline

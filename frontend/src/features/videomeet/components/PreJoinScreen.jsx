@@ -3,7 +3,7 @@ import InputField from "../../../components/InputField";
 
 export default function PreJoinScreen({
     roomId,
-    localVideoRef,
+    attachLocalVideo,
     video,
     setVideo,
     audio,
@@ -27,7 +27,7 @@ export default function PreJoinScreen({
                 )}
                 <div className="relative mb-8 overflow-hidden rounded-2xl border-2 border-sky-400/50 bg-slate-900 shadow-2xl">
                     <video 
-                        ref={localVideoRef} 
+                        ref={attachLocalVideo} 
                         autoPlay 
                         muted 
                         playsInline
@@ -44,8 +44,8 @@ export default function PreJoinScreen({
                         </div>
                     </div>
                     <div className="absolute bottom-3 left-3 right-3 space-y-1">
-                        {!videoAvailable && <p className="text-xs text-red-300">⚠️ Camera not available</p>}
-                        {!audioAvailable && <p className="text-xs text-red-300">⚠️ Microphone not available</p>}
+                        {!videoAvailable && <p className="text-xs text-red-300"><i class="fa-solid fa-video-slash" style={{color: "rgb(255, 212, 59)"}}></i> Camera not available</p>}
+                        {!audioAvailable && <p className="text-xs text-red-300"><i class="fa-solid fa-microphone-slash" style={{color: "rgb(255, 212, 59)"}}></i> Microphone not available</p>}
                     </div>
                 </div>
 

@@ -15,7 +15,7 @@ export default function VideoMeet() {
         return (
             <PreJoinScreen
                 roomId={meet.roomId}
-                localVideoRef={meet.localVideoRef}
+                attachLocalVideo={meet.attachLocalVideo}
                 video={meet.video}
                 setVideo={meet.setVideo}
                 audio={meet.audio}
@@ -42,7 +42,7 @@ export default function VideoMeet() {
                     videos={meet.videos}
                     participantVideoState={meet.participantVideoState}
                     getParticipantName={meet.getParticipantName}
-                    localVideoRef={meet.localVideoRef}
+                    attachLocalVideo={meet.attachLocalVideo}
                     video={meet.video}
                     screen={meet.screen}
                     username={meet.username}

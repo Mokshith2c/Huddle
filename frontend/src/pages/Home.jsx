@@ -111,7 +111,7 @@ function Home() {
 		setIsChecking(true);
 		debounceRef.current = setTimeout(async () => {
 			try {
-				const res = await fetch(`${server_url}/api/v1/users/check-room/${encodeURIComponent(code)}`);
+				const res = await fetch(`${server_url}/api/v1/users/check-room/${encodeURIComponent(code)}`, {cache: "no-store"});
 				const data = await res.json();
 				const roomExists = Boolean(data.exists || data.active);
 				if (roomExists) {
@@ -145,7 +145,7 @@ function Home() {
 		setIsChecking(true);
 		let roomExists = false;
 		try {
-			const res = await fetch(`${server_url}/api/v1/users/check-room/${encodeURIComponent(code)}`);
+			const res = await fetch(`${server_url}/api/v1/users/check-room/${encodeURIComponent(code)}`, {cache: "no-store"});
 			const data = await res.json();
 			roomExists = Boolean(data.exists || data.active);
 		} catch (err) {
@@ -356,7 +356,7 @@ function Home() {
 						)}
 						<button
 							className="joinmeet-btn w-1/2"
-							disabled={isChecking || isAvailable === false}
+							disabled={isChecking || (mode === 1 && isAvailable === false)}
 							onClick={checkRoomAndCreate}
 						>
 							{isChecking ? <i className="fa-solid fa-spinner fa-spin"></i> : (mode === 0 ? "Join Meeting" : "Create Meeting")}
