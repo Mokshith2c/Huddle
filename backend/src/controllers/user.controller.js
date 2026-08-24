@@ -77,24 +77,9 @@ const logout = async (req, res) => {
 const getUserHistory = async (req, res) => {
     try {
         const username = req.user.username;
-        const meetings = await Meeting.aggregate([
-            { $match: { username: username } },
-            { $sort: { date: -1 } },
-            {
-                $group: {
-                    _id: "$meetingCode",
-                    date: { $first: "$date" }
-                }
-            },
-            {
-                $project: {
-                    _id: "$_id",
-                    meetingCode: "$_id",
-                    date: 1
-                }
-            },
-            { $sort: { date: -1 } }
-        ]);
+        const meetings = await Meeting.find({ username: username })
+            .sort({ date: -1 })
+            .lean();
         res.json(meetings);
     } catch (e) {
         res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Error ${e.message}` });
@@ -156,6 +141,32 @@ const getMediaHistory = async (req, res) => {
     }
 }
 
+const updateMeetingTags = async (req, res) => {
+    console.log(req);
+    console.log("req", req.body);
+    const { id } = req.params;
+    const { tags } = req.body;
+ 
+    try {
+        const username = req.user.username;
+        const meeting = await Meeting.findOne({ _id: id, username: username });
+ 
+        if (!meeting) {
+            return res.status(httpStatus.NOT_FOUND).json({ message: "History entry not found" });
+        }
+ 
+        meeting.tags = tags;
+        await meeting.save();
+ 
+        res.status(httpStatus.OK).json({ message: "Tags updated", tags: meeting.tags });
+    } catch (e) {
+        if (e.name === "CastError") {
+            return res.status(httpStatus.BAD_REQUEST).json({ message: "Invalid history entry id" });
+        }
+        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Error: ${e.message}` });
+    }
+};
+
 const checkRoom = (req, res) => {
     const code = req.params.code;
     if (!code || typeof code !== "string" || !code.trim()) {
@@ -168,4 +179,4 @@ const checkRoom = (req, res) => {
     return res.status(httpStatus.OK).json({ active: isActive, exists: isActive });
 };
 
-export { login, register, logout, getUserHistory, addToHistory, getMediaHistory, checkRoom };
+export { login, register, logout, getUserHistory, addToHistory, getMediaHistory, updateMeetingTags, checkRoom };

@@ -36,7 +36,7 @@ const LandingPage = () => {
       
       <nav className="flex justify-between items-center w-full pt-8 px-5">
         <div>
-          <Link to="/" className=' px-5 text-3xl font-bold tracking-wide text-white drop-shadow-md'>
+          <Link to="/" className=' px-5 text-[2.2rem] font-bold tracking-wide text-white drop-shadow-md'>
               Huddle
           </Link>
         </div>
@@ -148,14 +148,14 @@ const LandingPage = () => {
         )}
       </nav>
 
-      <div className='mt-14 flex flex-col items-center justify-around gap-10 px-6 lg:flex-row lg:gap-0 lg:mr-10'>
+      <div className='mt-8 flex flex-col items-center justify-around gap-10 px-6 lg:flex-row lg:gap-0 lg:mr-10'>
         <div className='w-full max-w-2xl lg:w-2/6'>
           <p className='text-white text-5xl md:text-5xl font-bold leading-tight'>
             Meet. Talk. Collaborate.
           </p>
 
-          <p className='mb-7 mt-3 text-xl text-gray-200'>
-            Cover a distance by <span className="text-cyan-400">huddle </span> 
+          <p className='mb-7 mt-3 text-lg text-gray-200'>
+            Bridge the distance with <span className="text-cyan-400">Huddle </span> 
             <i className="fa-solid fa-heart fa-jello fa-sm" style={{color: "rgb(212, 67, 95)"}}></i>
           </p>
 
@@ -227,8 +227,6 @@ const LandingPage = () => {
             <h3 className='text-white font-semibold mb-2'>File Sharing</h3>
             <p className='text-slate-400 text-sm'>Share documents, images, and files instantly during meetings.</p>
           </div>
-
-
         </div>
       </div>
     </div>

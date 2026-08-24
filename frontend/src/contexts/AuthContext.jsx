@@ -167,6 +167,11 @@ export const AuthProvider = ({ children }) => {
         return res.data;
     };
 
+    const updateMeetingTags = async(meetingId, tags) => {
+        const res = await client.patch(`/history/${meetingId}/tags`, {tags})
+        return res.data;
+    }
+
     const data = {
         handleRegister,
         handleLogin,
@@ -195,7 +200,8 @@ export const AuthProvider = ({ children }) => {
         setPassword,
         addToUserHistory,
         getHistoryOfUser,
-        getMediaHistory
+        getMediaHistory,
+        updateMeetingTags
     };
 
     return (

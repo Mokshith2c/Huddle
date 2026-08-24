@@ -1,7 +1,6 @@
 import * as React from "react";
 import SignInForm from "../components/SignInForm";
 import SignUpForm from "../components/SignUpForm";
-import { createContext } from "react";
 import { AuthContext } from "../contexts/AuthContext";
 const AuthPage = () => {
 	const {isSignup, setIsSignup } = React.useContext(AuthContext);
@@ -26,7 +25,7 @@ const AuthPage = () => {
 						{!isSignup && <SignInForm />}
 						{isSignup && <SignUpForm />}
 					</div>
-					<div className="w-full md:w-1/2 h-auto md:h-full flex flex-col justify-center items-center text-center px-6 md:px-10 py-8 md:py-12 bg-linear-to-b from-[#0f1723] to-[#101b29] border-t md:border-t-0 md:border-l border-[#263142]">
+					<div className="w-full md:w-1/2 rounded-2xl h-auto md:h-full flex flex-col justify-center items-center text-center px-6 md:px-10 py-8 md:py-12 bg-linear-to-b from-[#0f1723] to-[#101b29] border-t md:border-t-0 md:border-l border-[#263142]">
 						<span className="text-xs uppercase tracking-[0.2em] text-sky-300/80 mb-4">
 							huddle
 						</span>
@@ -39,7 +38,7 @@ const AuthPage = () => {
 						<p className="text-sm text-gray-400 mb-8 leading-relaxed max-w-xs">
 							{isSignup
 								? "Sign in and continue where your team left off."
-								: "Join huddle to schedule and host meetings with ease."}
+								: "Join huddle to host meetings with ease."}
 						</p>
 						<button
 							onClick={() => setIsSignup(prev => !prev)}

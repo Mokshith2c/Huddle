@@ -24,7 +24,7 @@ function Home() {
 	const [isChecking, setIsChecking] = useState(false);
 	const [isAvailable, setIsAvailable] = useState(null); // null=unchecked, true=free, false=taken
 	const debounceRef = useRef(null);
-	const { addToUserHistory, showToast, handleLogout } = useContext(AuthContext);
+	const {showToast, handleLogout } = useContext(AuthContext);
 	const normalizedCode = meetingCode.trim();
 	const inviteLink = normalizedCode ? `${window.location.origin}/${encodeURIComponent(normalizedCode)}` : "";
 	const handleCreate = () => {
@@ -165,11 +165,6 @@ function Home() {
 			return;
 		}
 
-		try {
-			await addToUserHistory(code);
-		} catch (err) {
-			console.error("Failed to add meeting to history", err);
-		}
 		setShowModal(false);
 		setMode(-1);
 		setMeetingCode("");
@@ -183,7 +178,7 @@ function Home() {
 
 			<nav className="relative z-10 flex justify-between items-center pt-8 pl-5 pr-5 flex-wrap gap-4">
 				<div>
-					<Link to="/" className=' px-5 text-3xl font-bold tracking-wide text-white drop-shadow-md'>
+					<Link to="/" className=' px-5 text-[2.2rem] font-bold tracking-wide text-white drop-shadow-md'>
 						Huddle
 					</Link>
 				</div>
@@ -223,9 +218,9 @@ function Home() {
 						/>
 						<p className="text-cyan-200 text-sm tracking-[0.2em] uppercase">Your workspace</p>
 
-						<h1 className="mt-3 text-2xl md:text-3xl font-semibold leading-tight">Connect Instantly<i className="fa-solid fa-bolt"></i>, Anywhere</h1>
+						<h1 className="mt-3 text-2xl md:text-3xl font-semibold leading-tight">Connect Instantly <i className="fa-solid fa-bolt"></i> Anywhere</h1>
 						<p className="mt-4 text-white/70 text-sm md:text-base">
-							Real-time video meetings with chat, screen sharing
+							Real-time meetings with video, chat, screen sharing, and more.
 						</p>
 						<div className='flex flex-col sm:flex-row justify-center gap-3 md:gap-5 mt-5'>
 							<button className='createmeet-btn' onClick={handleCreate}>
