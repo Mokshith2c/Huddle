@@ -20,11 +20,7 @@ const allowedOrigins = [
   "https://huddlemeet.tech",
   "https://www.huddlemeet.tech"
 ].filter(Boolean);
-// app.use(cors({
-//     origin: [process.env.FRONTEND_URL, process.env.FRONTEND_TEST_URL],
-//     methods: ["GET", "POST", "PUT", "DELETE"],
-//     credentials: true
-// }));
+
 app.use(cors({
   origin: allowedOrigins,
   credentials: true
@@ -63,9 +59,7 @@ const start = async () => {
     throw new Error("MONGODB_URI is not set");
   }
   try {
-    const connectionDb = await mongoose.connect(process.env.MONGODB_URI);
-    console.log(`MONGO Connected DB Host: ${connectionDb.connection.host}`);
-    console.log(`MONGO Connected DB Name: ${connectionDb.connection.name}`);
+    await mongoose.connect(process.env.MONGODB_URI);
     server.listen(port, () => {
       console.log(`Listening on port ${port}`);
     });

@@ -142,8 +142,6 @@ const getMediaHistory = async (req, res) => {
 }
 
 const updateMeetingTags = async (req, res) => {
-    console.log(req);
-    console.log("req", req.body);
     const { id } = req.params;
     const { tags } = req.body;
  

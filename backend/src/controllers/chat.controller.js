@@ -1,7 +1,6 @@
 import { Media } from "../models/media.model.js";
 
 export const uploadFile = async (req, res) => {
-    console.log("uf reached");
     try{
         if(!req.file){
             return res.status(400).json({message: "No file uploaded"});
@@ -15,6 +14,7 @@ export const uploadFile = async (req, res) => {
             return res.status(400).json({message: "meetingCode is required"});
         }
 
+        
         const media = new Media({
             meetingCode: meetingCode.trim(),
             url: fileUrl, // cloudinary url

@@ -56,7 +56,6 @@ function History() {
             await updateMeetingTags(meetingId, nextTags);
         } catch (err) {
             setMeetings((prev) => prev.map((m) => (m._id === meetingId ? { ...m, tags: currentTags } : m)));
-            console.log(err.response)
             const message = err.response?.data?.message || 'Failed to add tag';
             showToast(message, 3000, 'error');
         }
@@ -87,7 +86,6 @@ function History() {
                 setMeetings(Array.isArray(history) ? history : []);
                 setMediaMap(media || {});
             } catch (err) {
-                console.log("ERROR: ", err);
                 const message = err.response?.data?.message || 'Unable to load meeting history.';
                 setError(message);
             } finally {

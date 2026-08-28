@@ -100,21 +100,19 @@ export const connectToSocket = (server) => {
     });
 
     io.on('connection', (socket) => {
-        console.log("Something Connected");
         socket.on('join-call', async (path, username) => {
-            console.log(socket.data);
             if (roomUsers[path] === undefined) {
                 roomUsers[path] = {}
             }
             if (roomStartTimes[path] === undefined) {
                 roomStartTimes[path] = Date.now();
             }
-
+            
             const safeUsername =
-                typeof username === "string" && username.trim()
-                    ? username.trim()
-                    : "Guest";
-
+            typeof username === "string" && username.trim()
+            ? username.trim()
+            : "Guest";
+            
             socket.join(path);
             socket.data.roomPath = path;
             roomUsers[path][socket.id] = safeUsername;
@@ -140,6 +138,8 @@ export const connectToSocket = (server) => {
 
         //for WebRTC signaling,as WebRTC cannot directly start connection.
         socket.on("signal", (toId, message) => {
+            const roomId = socket.data.roomPath;
+            if(!roomId || !roomUsers[roomId]?.[toId])return;
             io.to(toId).emit("signal", socket.id, message);
         })
 
@@ -234,32 +234,17 @@ export const connectToSocket = (server) => {
         })
 
 
-        //Triggered when someone sends chat.
         socket.on("chat-message", (data, sender) => {
             const matchingRoom = socket.data.roomPath;
             const found = Boolean(matchingRoom);
-
-            // let matchingRoom = ''
-            // let found = false
-
-            // for(const [room, users] of Object.entries(connections)){
-            //     if(users.includes(socket.id)){
-            //         matchingRoom = room
-            //         found = true
-            //         break
-            //     }
-            // }
-
             if (found === true) {
                 if (messages[matchingRoom] === undefined) {
                     messages[matchingRoom] = []
                 }
 
-                // Store the message in memory
                 messages[matchingRoom].push({ 'sender': sender, 'data': data, 'socket-id-sender': socket.id });
-                console.log("message", matchingRoom, ":", sender, data);
 
-                // Send the message to everyone in the room
+                // Send msg to everyone in the room
                 io.to(matchingRoom).emit('chat-message', data, sender, socket.id);
             }
 

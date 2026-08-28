@@ -150,7 +150,7 @@ const LandingPage = () => {
 
       <div className='mt-8 flex flex-col items-center justify-around gap-10 px-6 lg:flex-row lg:gap-0 lg:mr-10'>
         <div className='w-full max-w-2xl lg:w-2/6'>
-          <p className='text-white text-5xl md:text-5xl font-bold leading-tight'>
+          <p className='text-white text-[2.8rem] font-bold leading-tight'>
             Meet. Talk. Collaborate.
           </p>
 

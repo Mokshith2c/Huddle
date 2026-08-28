@@ -5,7 +5,6 @@ import httpStatus from "http-status"
 dotenv.config();
 
 export const authMiddleware = (req, res, next) => {
-    console.log("auth reached");
     const token = req.headers.authorization?.split(" ")[1];
 
     if(!token){
@@ -17,7 +16,6 @@ export const authMiddleware = (req, res, next) => {
     try{
         const decodedRes = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decodedRes;
-        console.log(req.user);
         next();
     }catch(err){
         if(err.name === "TokenExpiredError"){

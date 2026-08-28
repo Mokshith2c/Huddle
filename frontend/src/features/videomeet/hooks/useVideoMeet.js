@@ -4,7 +4,7 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { AuthContext } from "../../../contexts/AuthContext";
 import { silence, black, createEmptyStream } from "../utils/mediaHelpers";
-import { buildLocationPayload } from "../utils/geocode";
+import { buildLocationPayload, parseMapboxGeocode } from "../utils/geocode";
 
 const backendHost = import.meta.env.VITE_BACKEND_HOST || window.location.hostname;
 const backendPort = import.meta.env.VITE_BACKEND_PORT || "5000";
@@ -42,9 +42,10 @@ export default function useVideoMeet() {
     const pendingCandidatesRef = useRef({});
     const screenStreamRef = useRef(null);
 
+    const isConnectingRef = useRef(false);
 
-    const [videoAvailable, setVideoAvailable] = useState(true);
-    const [audioAvailable, setAudioAvailable] = useState(true);
+    const [videoAvailable, setVideoAvailable] = useState(false);
+    const [audioAvailable, setAudioAvailable] = useState(false);
     const [video, setVideo] = useState(false);
     const videoRef = useRef(video);
     useEffect(() => {
@@ -156,14 +157,8 @@ export default function useVideoMeet() {
     };
 
     const broadcastVideoState = (isVideoOn = videoRef.current) => {
-        if (!socketRef.current?.connected) {
-            return;
-        }
-
+        if (!socketRef.current?.connected) return;
         Object.keys(connectionsRef.current).forEach((id) => {
-            if (id === socketIdRef.current) {
-                return;
-            }
             socketRef.current.emit("signal", id, JSON.stringify({ videoState: !!isVideoOn }));
         });
     };
@@ -185,6 +180,11 @@ export default function useVideoMeet() {
             connection.addTrack(track, localStreamRef.current);
         });
         connection._tracksAdded = true;
+    };
+
+    const isPolite = (remoteSocketId) => {
+        if (!socketIdRef.current || !remoteSocketId) return true;
+        return socketIdRef.current < remoteSocketId;
     };
 
     const setupPeerConnection = (socketId) => {
@@ -286,12 +286,16 @@ export default function useVideoMeet() {
     const createAndSendOffer = (socketId) => {
         const connection = connectionsRef.current[socketId];
         if (!connection || connection.signalingState !== "stable" || !socketRef.current?.connected) return;
+        connection._makingOffer = true;
         connection.createOffer()
             .then((description) => connection.setLocalDescription(description))
             .then(() => {
                 socketRef.current.emit("signal", socketId, JSON.stringify({ sdp: connection.localDescription }));
             })
-            .catch((e) => console.log(e));
+            .catch((e) => console.log(e))
+            .finally(()=>{
+                connection._makingOffer = false;
+            })
     };
 
     const stopLocalStreamTracks = () => {
@@ -313,38 +317,41 @@ export default function useVideoMeet() {
     const getPermissions = async () => {
         let isVideoAvailable = false;
         let isAudioAvailable = false;
-
+ 
         try {
-            const videoPermission = await navigator.mediaDevices.getUserMedia({ video: true });
-            if (videoPermission) {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            isVideoAvailable = stream.getVideoTracks().length > 0;
+            isAudioAvailable = stream.getAudioTracks().length > 0;
+            stream.getTracks().forEach((track) => track.stop());
+        } catch {
+            try {
+                const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
                 isVideoAvailable = true;
-                videoPermission.getTracks().forEach((track) => track.stop());
+                videoStream.getTracks().forEach((track) => track.stop());
+            } catch {
+                isVideoAvailable = false;
             }
-        } catch {
-            isVideoAvailable = false;
-        }
-
-        try {
-            const audioPermission = await navigator.mediaDevices.getUserMedia({ audio: true });
-            if (audioPermission) {
+ 
+            try {
+                const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 isAudioAvailable = true;
-                audioPermission.getTracks().forEach((track) => track.stop());
+                audioStream.getTracks().forEach((track) => track.stop());
+            } catch {
+                isAudioAvailable = false;
             }
-        } catch {
-            isAudioAvailable = false;
         }
-
+ 
         setVideoAvailable(isVideoAvailable);
         setAudioAvailable(isAudioAvailable);
         setScreenAvailable(!!navigator.mediaDevices.getDisplayMedia);
-
     };
 
     useEffect(() => {
+        if(!askForUsername)return;
         if (video !== undefined && audio !== undefined) {
             getUserMedia();
         }
-    }, [video, audio]);
+    }, [video, audio, askForUsername]);
 
     useEffect(() => {
         return () => {
@@ -355,10 +362,18 @@ export default function useVideoMeet() {
     }, []);
 
     const getUserMedia = () => {
-        if ((video && videoAvailable) || (audio && audioAvailable)) {
+        if (video || audio ){
             navigator.mediaDevices.getUserMedia({ video: video, audio: audio })
-                .then(applyLocalStream)
-                .catch((e) => console.log(e));
+                .then((stream) => {
+                    if(video) setVideoAvailable(true);
+                    if(audio) setAudioAvailable(true);
+                    applyLocalStream(stream);
+                })
+                .catch((e) => {
+                    console.log(e);
+                    if (video) setVideo(false);
+                    if (audio) setAudio(false);
+                })
         } else {
             try {
                 let tracks = localVideoRef.current?.srcObject?.getTracks?.() || [];
@@ -512,46 +527,7 @@ export default function useVideoMeet() {
 
                     if (response.ok) {
                         const data = await response.json();
-                        const features = data.features;
-                        // Avoid direct Mapbox Context dependencies in features mapping
-                        const getMapboxContextLocal = (context, type) =>
-                            context?.find((item) => item.id?.startsWith(`${type}.`))?.text || null;
-
-                        if (features?.length) {
-                            const primary = features[0];
-                            const context = primary.context || [];
-
-                            const country =
-                                getMapboxContextLocal(context, "country") ||
-                                features.find((feature) => feature.place_type?.includes("country"))?.text ||
-                                null;
-
-                            const city =
-                                getMapboxContextLocal(context, "place") ||
-                                features.find((feature) => feature.place_type?.includes("place"))?.text ||
-                                null;
-
-                            const neighborhood =
-                                getMapboxContextLocal(context, "neighborhood") ||
-                                features.find((feature) => feature.place_type?.includes("neighborhood"))?.text ||
-                                null;
-
-                            const locality =
-                                getMapboxContextLocal(context, "locality") ||
-                                features.find((feature) => feature.place_type?.includes("locality"))?.text ||
-                                null;
-
-                            const poi = features.find((feature) => feature.place_type?.includes("poi"))?.text || null;
-                            const street = primary.place_type?.includes("address") ? primary.text : null;
-
-                            let placeName = neighborhood || locality || poi || street || primary.text || null;
-
-                            if (placeName && city && placeName === city) {
-                                placeName = neighborhood || locality || street || primary.text || null;
-                            }
-
-                            geocodeResult = { placeName, city, country };
-                        }
+                        geocodeResult = parseMapboxGeocode(data.features);
                     } else {
                         console.error("Reverse geocoding failed:", response.status, response.statusText);
                     }
@@ -592,7 +568,8 @@ export default function useVideoMeet() {
     };
 
     const connectToSocketServer = () => {
-        if (socketRef.current && socketRef.current.connected) return;
+        if (socketRef.current || isConnectingRef.current) return;
+        isConnectingRef.current = true;
         const token = localStorage.getItem("token");
         const socket = io.connect(server_url, {
             auth: {
@@ -653,7 +630,7 @@ export default function useVideoMeet() {
                 setupPeerConnection(socketListId);
 
                 if (!localStreamRef.current) {
-                    localStreamRef.current = createEmptyStream();
+                    applyLocalStream(createEmptyStream(), { notifyPeers: false });
                 }
                 addLocalTracksOnce(socketListId);
             });
@@ -675,16 +652,38 @@ export default function useVideoMeet() {
     };
 
     const toggleAudioBtn = () => {
-        setAudio((prev) => {
-            const newState = !prev;
-            const audioTracks = localStreamRef.current?.getAudioTracks?.() || [];
-
-            audioTracks.forEach((track) => {
-                track.enabled = newState;
+        const realAudioTrack = localStreamRef.current?.getAudioTracks?.()
+        .find((track) => track.readyState === "live" && track.label);
+        
+        if(audio){
+            if(realAudioTrack)realAudioTrack.enabled=false;
+            setAudio(false);
+            return;
+        }
+        if (realAudioTrack) {
+            realAudioTrack.enabled = true;
+            setAudio(true);
+            return;
+        }
+ 
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then((stream) => {
+                const newAudioTrack = stream.getAudioTracks()[0];
+                const currentVideoTracks = localStreamRef.current?.getVideoTracks?.() || [];
+                const combinedStream = new MediaStream([...currentVideoTracks, newAudioTrack]);
+ 
+                const oldAudioTracks = localStreamRef.current?.getAudioTracks?.() || [];
+                oldAudioTracks.forEach((track) => {
+                    try { track.stop(); } catch (e) { console.log(e); }
+                });
+ 
+                applyLocalStream(combinedStream);
+                setAudioAvailable(true);
+                setAudio(true);
+            })
+            .catch((e) => {
+                console.log("Failed to enable audio:", e);
             });
-
-            return newState;
-        });
     };
 
     const toggleVideoBtn = () => {
@@ -693,6 +692,7 @@ export default function useVideoMeet() {
                 .then((stream) => {
                     applyLocalStream(stream);
                     setVideo(true);
+                    setVideoAvailable(true);
                     broadcastVideoState(true);
                 })
                 .catch((e) => {
