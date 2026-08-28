@@ -3,7 +3,7 @@ import { useRef, useEffect, useState } from 'react';
 import { IoArrowUndo } from "react-icons/io5";
 import { IoArrowRedo } from "react-icons/io5";
 import { MdDownloadForOffline } from "react-icons/md";
-function WhiteBoard({ socket, width = 500, showWB }) {
+function WhiteBoard({ socket, showWB }) {
   const canvasRef = useRef(null);
   const ctxRef = useRef(null);
   const drawingRef = useRef(false);
@@ -222,7 +222,7 @@ function WhiteBoard({ socket, width = 500, showWB }) {
   }
 
   return (
-    <div className="w-full h-full flex flex-col gap-2 bg-slate-900 p-3">
+    <div className="w-full h-full flex flex-col gap-2 bg-slate-900 p-3 rounded-2xl">
       <div className='flex justify-between items-center flex-shrink-0'>
         <div>
           <button className='rounded-md bg-slate-800 px-3 py-1 text-xs text-slate-100 transition-all duration-200 ease-out hover:bg-slate-700 hover:-translate-y-0.5  active:translate-y-0 active:scale-95 mr-2'

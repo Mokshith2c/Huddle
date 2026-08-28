@@ -62,7 +62,7 @@ export default function VideoGrid({
             })}
 
             {/* Local Video Thumbnail Overlay */}
-            <div className="fixed bottom-22.5 h-32.5 w-50 overflow-hidden rounded-xl border-2 border-sky-400/90 bg-slate-900 shadow-xl">
+            <div className="fixed bottom-22.5 h-32.5 w-50  overflow-hidden rounded-xl border-2 border-sky-400/90 bg-slate-900 shadow-xl">
                 {(video || screen) ? (
                     <video
                         ref={attachLocalVideo}

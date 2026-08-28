@@ -37,7 +37,7 @@ export default function VideoMeet() {
                 className="self-start rounded-full border border-slate-700/70 bg-slate-900/80 px-3 py-1.5 text-xs font-medium text-slate-200 shadow"
             />
             
-            <div className="flex flex-1 min-h-0 gap-4 flex-col md:flex-row lg:flex-row">
+            <div className="relative flex flex-1 min-h-0 gap-4 flex-col md:flex-row lg:flex-row">
                 <VideoGrid
                     videos={meet.videos}
                     participantVideoState={meet.participantVideoState}
@@ -49,7 +49,7 @@ export default function VideoMeet() {
                 />
 
                 {meet.whiteboard && (
-                    <div className="w-125 h-[70vh] min-h-0 rounded-xl border border-slate-700/70 bg-slate-900/95 shadow-xl box-border flex flex-col z-10">
+                    <div className="absolute inset-0 md:static md:w-125 md:flex-none md:h-[70vh] md:shrink-0 rounded-xl border border-slate-700/70 bg-slate-900/95 shadow-xl box-border flex flex-col z-20">
                         <WhiteBoard 
                             showWB={meet.showWhiteboard} 
                             socket={meet.socket} 
@@ -90,8 +90,7 @@ export default function VideoMeet() {
                 screenAvailable={meet.screenAvailable}
                 newMessages={meet.newMessages}
                 showModal={meet.showModal}
-                setShowModal={meet.setShowModal}
-                setNewMessages={meet.setNewMessages}
+                toggleChat={meet.toggleChat}
                 showInvite={meet.showInvite}
                 setShowInvite={meet.setShowInvite}
                 toggleAudioBtn={meet.toggleAudioBtn}

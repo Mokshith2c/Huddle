@@ -11,12 +11,6 @@ let messages = {}
 //    {sender:"Mike", data:"Hi", socket-id-sender:"xyz456"}
 //  ]
 // }
-let timeOnline = {}
-// Ex:
-// timeOnline = {
-//  "socket123": Date,
-//  "socket456": Date
-// }
 export let roomUsers = {}
 // Ex:
 // roomUsers = {
@@ -36,7 +30,8 @@ let whiteboardState = {}
 //         { x: 10, y: 20 },
 //         { x: 15, y: 25 },
 //         { x: 20, y: 30 }
-//       ]
+//       ],
+//       socketId: 'si-P6zL8WT8Sqy3bAAAD'
 //     },
 //     {
 //       color: "red",
@@ -44,23 +39,25 @@ let whiteboardState = {}
 //       points: [
 //         { x: 50, y: 60 },
 //         { x: 55, y: 65 }
-//       ]
+//       ],
+//       socketId: 'Fi-P6zL8WT8Sqy3bAAAD'
 //     }
 //   ]
+// }
 
 let redoState = {}
 // Ex:
 // redoState = {
 //   "/room1": [
 //     {
-//       color: "blue",
-//       size: 3,
-//       points: [
-//         { x: 100, y: 120 },
-//         { x: 110, y: 130 }
-//       ]
-//     },
-//     ...
+//       stroke: {
+//         color: "blue",
+//         size: 3,
+//         points: [...],
+//         socketId: "..."
+//       },
+//       index: 1
+//     }
 //   ]
 // }
 
@@ -116,7 +113,6 @@ export const connectToSocket = (server) => {
             socket.join(path);
             socket.data.roomPath = path;
             roomUsers[path][socket.id] = safeUsername;
-            timeOnline[socket.id] = new Date();
 
             const clientsInRoom = await io.in(path).fetchSockets();
             const clientIds = clientsInRoom.map((clientSocket) => clientSocket.id);
@@ -170,7 +166,7 @@ export const connectToSocket = (server) => {
             if (!roomId) return;
             if (!whiteboardState[roomId]) return;
             const history = whiteboardState[roomId];
-            if (!history || history.length === 0) return;
+            if (history.length === 0) return;
             if (!redoState[roomId]) redoState[roomId] = []
 
             let strokeIndex = -1;
@@ -182,8 +178,12 @@ export const connectToSocket = (server) => {
             }
 
             if (strokeIndex !== -1) {
+                console.log(history);
+                //splice returns array, so [0] gives obj
                 const removedStroke = history.splice(strokeIndex, 1)[0];
-                redoState[roomId].push(removedStroke);
+                console.log(removedStroke);
+                redoState[roomId].push({stroke: removedStroke, index: strokeIndex});
+                console.log(redoState);
                 if (redoState[roomId].length > 1000) {
                     redoState[roomId].shift();
                 }
@@ -193,29 +193,34 @@ export const connectToSocket = (server) => {
         socket.on("whiteboard-redo", () => {
             const roomId = socket.data.roomPath;
             if (!roomId) return;
-            if (!whiteboardState[roomId]) {
-                whiteboardState[roomId] = [];
-            }
+            if (!whiteboardState[roomId])return;
             const history = whiteboardState[roomId];
 
             if (!redoState[roomId]) redoState[roomId] = [];
             const redoStack = redoState[roomId];
 
-            if (!redoStack || redoStack.length === 0) return;
+            if (redoStack.length === 0) return;
 
-            let strokeIndex = -1;
+            let redoIndex = -1;
             for (let i = redoStack.length - 1; i >= 0; i--) {
-                if (redoStack[i].socketId === socket.id) {
-                    strokeIndex = i;
+                if (redoStack[i].stroke.socketId === socket.id) {
+                    redoIndex = i;
                     break;
                 }
             }
 
-            if (strokeIndex !== -1) {
-                const stroke = redoStack.splice(strokeIndex, 1)[0];
-                history.push(stroke);
-                io.to(roomId).emit("whiteboard-update", history);
-            }
+            if (redoIndex !== -1) {
+        const { stroke, index } = redoStack.splice(redoIndex, 1)[0];
+
+        // Put the stroke back at its original position
+        history.splice(
+            Math.min(index, history.length),
+            0,
+            stroke
+        );
+
+        io.to(roomId).emit("whiteboard-update", history);
+    }
         });
         socket.on("whiteboard-clear", () => {
             const roomId = socket.data.roomPath;
@@ -253,20 +258,20 @@ export const connectToSocket = (server) => {
 
         // Runs automatically when user: closes browser, loses internet, leaves meeting
         socket.on('disconnect', async () => {
-            var diffTime = Math.abs((timeOnline[socket.id] || new Date()) - new Date());
             const key = socket.data.roomPath;
 
             if (key) {
                 io.to(key).emit('user-left', socket.id);
-                delete roomUsers[key]?.[socket.id];
-
-                const clientsInRoom = await io.in(key).fetchSockets();
-                if (clientsInRoom.length === 0) {
-                    delete roomUsers[key]
-                    delete roomStartTimes[key]
-                    delete whiteboardState[key]
-                    delete messages[key]
-                    delete redoState[key]
+                if(roomUsers[key]){
+                    delete roomUsers[key][socket.id];
+                    //if no one left in room
+                    if(Object.keys(roomUsers[key]).length === 0){
+                        delete roomUsers[key];
+                        delete roomStartTimes[key];
+                        delete whiteboardState[key];
+                        delete redoState[key];
+                        delete messages[key];
+                    }
                 }
             }
         })

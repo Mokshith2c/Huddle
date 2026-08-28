@@ -8,8 +8,7 @@ export default function ControlBar({
     screenAvailable,
     newMessages,
     showModal,
-    setShowModal,
-    setNewMessages,
+    toggleChat,
     showInvite,
     setShowInvite,
     toggleAudioBtn,
@@ -51,10 +50,7 @@ export default function ControlBar({
 
             <div className="relative inline-block">
                 <button 
-                    onClick={() => {
-                        setShowModal((prev) => !prev);
-                        setNewMessages(0);
-                    }}
+                    onClick={toggleChat}
                     className="h-11 w-11 rounded-full bg-slate-800 text-lg text-slate-100 transition-all duration-200 ease-out hover:bg-slate-700 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
                 >
                     <i className="fa-brands fa-rocketchat"></i>

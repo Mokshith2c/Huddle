@@ -781,9 +781,29 @@ export default function useVideoMeet() {
         broadcastVideoState(videoRef.current);
     };
 
+    const isNarrowViewport = () => typeof window !== "undefined" && window.innerWidth < 768;
+
+
     const showWhiteboard = () => {
-        setWhiteboard((prev) => !prev);
+        setWhiteboard((prev)=>{
+            const next = !prev;
+            if(next && isNarrowViewport()){
+                setShowModal(false);
+            }
+            return next;
+        });
     };
+
+    const toggleChat = () => {
+        setShowModal((prev) => {
+            const next = !prev;
+            if(next && isNarrowViewport()){
+                setWhiteboard(false);
+            }
+            return next;
+        });
+        setNewMessages(0);
+    }
 
     const connect = async () => {
         const safeUsername =
@@ -945,6 +965,7 @@ export default function useVideoMeet() {
         sendMessage,
         showModal,
         setShowModal,
+        toggleChat,
 
         // File Upload
         fileInputRef,

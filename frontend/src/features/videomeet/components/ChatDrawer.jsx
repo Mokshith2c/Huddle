@@ -4,6 +4,7 @@ import { faMapPin } from "@fortawesome/free-solid-svg-icons";
 import InputField from "../../../components/InputField";
 import LocationPreviewModal from "./LocationPreviewModal";
 import { getLocationDisplay } from "../utils/geocode";
+import "./ChatDrawer.css";
 
 const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -29,7 +30,7 @@ export default function ChatDrawer({
     openLocationPreview
 }) {
     return (
-        <div className="max-h-full h-auto w-90 shrink-0 rounded-xl border border-slate-700/70 bg-slate-900/95 flex flex-col shadow-xl z-30 overflow-hidden">
+        <div className="absolute inset-0 md:static md:w-90 md:flex-none md:h-auto md:max-h-full md:shrink-0 rounded-xl border border-slate-700/70 bg-slate-900/95 flex flex-col shadow-xl z-30 overflow-hidden">
             <div className="p-3 border-b border-slate-700/70 font-semibold flex justify-between items-center bg-slate-900">
                 <div className="text-slate-100">Chat</div>
                 <button 
@@ -40,7 +41,7 @@ export default function ChatDrawer({
                 </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-slate-900/40">
+            <div className="chat-scroll flex-1 overflow-y-auto p-4 space-y-2 bg-slate-900/40">
                 {messages.map((item, index) => {
                     const isOwn = item.sender === username;
                     const isFile = typeof item.data === "object" && item.data.type === "file";
@@ -62,10 +63,10 @@ export default function ChatDrawer({
                                         isLocation
                                             ? isOwn
                                                 ? ""
-                                                : "px-3 py-2  rounded-2xl rounded-bl-sm bg-[#212325]"
+                                                : "px-3 py-2  rounded-2xl rounded-bl-sm bg-slate-800"
                                             : isOwn
-                                                ? "bg-[#5d5a55] text-white rounded-br-sm"
-                                                : "bg-[#212325] text-white rounded-bl-sm"
+                                                ? "bg-sky-600 text-white rounded-br-sm"
+                                                : "bg-slate-800 text-slate-100 rounded-bl-sm"
                                     }
                                 `}
                             >
@@ -87,7 +88,7 @@ export default function ChatDrawer({
                                         <div  
                                             className={`
                                                     w-full max-w-50 overflow-hidden border border-slate-600/50 bg-slate-800/90 shadow-md
-                                                    ${isOwn ? "rounded-2xl rounded-br-sm " : "rounded-2xl bg-[#2B2D31]"}
+                                                    ${isOwn ? "rounded-2xl rounded-br-sm " : "rounded-2xl bg-slate-800"}
                                                 `}
                                         >
                                             <div className="px-3 pt-3">
@@ -178,7 +179,7 @@ export default function ChatDrawer({
                                             onClick={() => handleDownload(item.data.url, item.data.name)}
                                             className={
                                             `flex items-center gap-1 text-[11px] opacity-90  text-white w-fit py-1 px-2 rounded-xl hover:opacity-100 transition-all duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-95
-                                            ${isOwn ? "bg-gray-700 hover:bg-[#323638]" : "bg-gray-500 hover:bg-gray-600"}`
+                                            ${isOwn ? "bg-slate-800 hover:bg-slate-700" : "bg-gray-500 hover:bg-gray-600"}`
                                             }
                                         >
                                             <i className="fa-solid fa-download"></i>
