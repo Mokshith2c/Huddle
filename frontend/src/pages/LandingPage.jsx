@@ -54,7 +54,7 @@ const LandingPage = () => {
           (
           <>
             <p
-              className="cursor-pointer hover:text-cyan-400 transition"
+              className="cursor-pointer hover:text-cyan-400"
               onClick={handleGuestClick}
             >
               <span>
@@ -63,7 +63,7 @@ const LandingPage = () => {
               </span>
             </p>
 
-            <p className="cursor-pointer hover:text-cyan-400 transition"
+            <p className="cursor-pointer hover:text-cyan-400"
             onClick={()=>navigate('/auth')}>
               <span>
                 <i className="fa-solid fa-user-plus fa-sm pr-5" style={{color: "rgb(183, 187, 193)"}}></i>
@@ -99,7 +99,7 @@ const LandingPage = () => {
             (
             <>
               <p
-                className="cursor-pointer text-center hover:text-cyan-400 transition"
+                className="cursor-pointer text-center hover:text-cyan-400"
                 onClick={() => {
                   handleGuestClick();
                   setMobileMenuOpen(false);
@@ -111,7 +111,7 @@ const LandingPage = () => {
               </span>
               </p>
 
-              <p className="cursor-pointer text-center hover:text-cyan-400 transition"
+              <p className="cursor-pointer text-center hover:text-cyan-400"
               onClick={()=>{
                 navigate('/auth');
                 setMobileMenuOpen(false);
@@ -177,18 +177,15 @@ const LandingPage = () => {
         <h2 className='text-center text-3xl font-bold text-white mb-12'>Why Choose Huddle<i className="fa-solid fa-question fa-sm fa-flip"></i></h2>
         <div className='grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto'>
           
-          <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center hover:border-cyan-400/5 transition'>
+          <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center'>
             <div className='text-4xl mb-3'>
-              <i
-                className="fa-solid fa-video fa-float"
-                style={{ color: "rgb(183, 187, 193)" }}
-              ></i>
+              <i className="fa-solid fa-video fa-float"style={{ color: "rgb(183, 187, 193)" }}></i>
             </div>
             <h3 className='text-white font-semibold mb-2'>HD Video Calls</h3>
             <p className='text-slate-400 text-sm'>Crystal clear video and audio for seamless meetings</p>
           </div>
 
-          <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center transition'>
+          <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center'>
             <div className='text-4xl mb-3'>
               <i className="fa-solid fa-message fa-jello" style={{color: "rgb(183, 187, 193)"}}></i>
             </div>
@@ -196,7 +193,7 @@ const LandingPage = () => {
             <p className='text-slate-400 text-sm'>Send instant messages alongside your video</p>
           </div>
 
-          <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center transition'>
+          <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center'>
             <div className='text-4xl mb-3'>
               <i className="fa-solid fa-pencil fa-swing" style={{color: "rgb(183, 187, 193)"}}></i>
             </div>
@@ -204,7 +201,7 @@ const LandingPage = () => {
             <p className='text-slate-400 text-sm'>Collaborate and draw together in real-time</p>
           </div>
 
-          <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center transition'>
+          <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center'>
             <div className='text-4xl mb-3'>
               <i className="fa-solid fa-desktop fa-float" style={{color: "rgb(183, 187, 193)"}}></i>
             </div>
@@ -212,7 +209,7 @@ const LandingPage = () => {
             <p className='text-slate-400 text-sm'>Share your screen instantly for better collaboration</p>
           </div>
           
-          <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center transition'>
+          <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center'>
             <div className='text-4xl mb-3'>
               <i className="fa-solid fa-map-pin fa-wag" style={{color: "rgb(183, 187, 193)"}}></i>
             </div>
@@ -220,7 +217,7 @@ const LandingPage = () => {
             <p className='text-slate-400 text-sm'>Instantly share your location for better coordination.</p>
           </div>
 
-          <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center transition'>
+          <div className='bg-slate-900/50 border border-slate-700/40 rounded-lg p-6 text-center'>
             <div className='text-4xl mb-3'>
               <i className="fa-solid fa-file fa-flip-360" style={{color: "rgb(183, 187, 193)"}}></i>
             </div>
