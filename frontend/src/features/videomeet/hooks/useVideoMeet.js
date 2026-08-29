@@ -605,7 +605,7 @@ export default function useVideoMeet() {
             setReactions((prev) => [...prev, { id: reactionId, senderId, emoji, left: randomLeft }]);
             setTimeout(() => {
                 setReactions((prev) => prev.filter((r) => r.id !== reactionId));
-            }, 2500);
+            }, 3000);
         });
 
         socket.on("user-left", (id) => {
@@ -985,6 +985,7 @@ export default function useVideoMeet() {
         setShowModal,
         toggleChat,
         sendReaction,
+        socketIdRef,
 
         // File Upload
         fileInputRef,

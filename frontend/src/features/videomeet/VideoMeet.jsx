@@ -85,13 +85,21 @@ export default function VideoMeet() {
                 {meet.reactions.length > 0 && (
                     <div className="pointer-events-none absolute inset-0 z-50 overflow-hidden">
                         {meet.reactions.map((r) => (
-                            <span
+                            <div
                                 key={r.id}
-                                className="animate-float-up absolute bottom-4 text-3xl sm:text-4xl"
-                                style={{ left: `${r.left}%` }}
+                                className="animate-float-up absolute bottom-4 flex flex-col items-center gap-1"
+                                style={{ left: `${r.left}%` }} // Using Option 1 simple random numbers from earlier
                             >
-                                {r.emoji}
-                            </span>
+                                {/* 2. The Floating Emoji */}
+                                <span className="text-3xl sm:text-4xl">
+                                    {r.emoji}
+                                </span>
+
+                                {/* 3. The "You" / Name Badge */}
+                                <span className="rounded-full bg-blue-400 px-3 py-0.5 text-xs font-medium text-white shadow-md">
+                                    {r.senderId === meet.socketIdRef.current ? "You" : meet.getParticipantName(r.senderId) || "User"}
+                                </span>
+                            </div>
                         ))}
                     </div>
                 )}
