@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMapPin } from "@fortawesome/free-solid-svg-icons";
 import InputField from "../../../components/InputField";
@@ -7,6 +8,10 @@ import { getLocationDisplay } from "../utils/geocode";
 import "./ChatDrawer.css";
 
 const mapboxToken = import.meta.env.VITE_MAPBOX_TOKEN;
+const backendHost = import.meta.env.VITE_BACKEND_HOST || window.location.hostname;
+const backendPort = import.meta.env.VITE_BACKEND_PORT || "5000";
+const backendProtocol = import.meta.env.VITE_BACKEND_PROTOCOL || "http";
+const server_url = `${backendProtocol}://${backendHost}:${backendPort}`;
 
 export default function ChatDrawer({
     messages,
@@ -29,6 +34,31 @@ export default function ChatDrawer({
     copyLocationCoordinates,
     openLocationPreview
 }) {
+    const [summaries, setSummaries] = useState({});
+
+    const handleSummarize = async (index, fileUrl) => {
+        setSummaries((prev) => ({ ...prev, [index]: { loading: true } }));
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.post(
+                `${server_url}/api/v1/chat/summarize-pdf`,
+                { fileUrl },
+                { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } }
+            );
+            setSummaries((prev) => ({ ...prev, [index]: { text: res.data.summary, expanded: false } }));
+        } catch (err) {
+            const message = err.response?.data?.message || "Couldn't summarize this file.";
+            setSummaries((prev) => ({ ...prev, [index]: { error: message } }));
+        }
+    };
+
+    const toggleSummaryExpand = (index) => {
+        setSummaries((prev) => ({
+            ...prev,
+            [index]: { ...prev[index], expanded: !prev[index]?.expanded }
+        }));
+    };
+
     return (
         <div className="absolute inset-0 md:static md:w-90 md:flex-none md:h-auto md:max-h-full md:shrink-0 rounded-xl border border-slate-700/70 bg-slate-900/95 flex flex-col shadow-xl z-30 overflow-hidden">
             <div className="p-3 border-b border-slate-700/70 font-semibold flex justify-between items-center bg-slate-900">
@@ -57,7 +87,7 @@ export default function ChatDrawer({
                         >
                             <div
                                 className={`
-                                    ${!isLocation ? "px-3 py-2 rounded-2xl max-w-50 wrap-break-word" : ""}
+                                    ${!isLocation ? `px-3 py-2 rounded-2xl wrap-break-word ${isFile ? "max-w-[85%] sm:max-w-80" : "max-w-50"}` : ""}
 
                                     ${
                                         isLocation
@@ -87,7 +117,7 @@ export default function ChatDrawer({
                                     return (
                                         <div  
                                             className={`
-                                                    w-full max-w-50 overflow-hidden border border-slate-600/50 bg-slate-800/90 shadow-md
+                                                    w-full max-w-[85%] sm:max-w-80 overflow-hidden border border-slate-600/50 bg-slate-800/90 shadow-md
                                                     ${isOwn ? "rounded-2xl rounded-br-sm " : "rounded-2xl bg-slate-800"}
                                                 `}
                                         >
@@ -171,7 +201,7 @@ export default function ChatDrawer({
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => window.open(item.data.url, "_blank", "noopener,noreferrer")}
-                                                className="flex-1 flex items-center justify-center gap-1 text-[11px] text-white py-1.5 px-2 rounded-xl transition-all duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-95 bg-white/15 hover:bg-white/25"
+                                                className="flex-1 flex items-center justify-center gap-1 text-[11px] text-white py-1.5 px-2 rounded-xl transition-all duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-95 bg-white/15 hover:bg-white/25 border border-white/25"
                                             >
                                                 <i className="fa-solid fa-up-right-from-square"></i>
                                                 Open
@@ -184,6 +214,42 @@ export default function ChatDrawer({
                                                 Download
                                             </button>
                                         </div>
+
+                                        {isPDF && !summaries[index] && (
+                                            <button
+                                                onClick={() => handleSummarize(index, item.data.url)}
+                                                className="flex items-center justify-center gap-1 text-[11px] text-white/90 py-1.5 px-2 rounded-xl transition-all duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-95 bg-black/20 hover:bg-black/30 border border-white/15"
+                                            >
+                                                <i className="fa-solid fa-wand-magic-sparkles"></i>
+                                                Summarize
+                                            </button>
+                                        )}
+
+                                        {isPDF && summaries[index]?.loading && (
+                                            <div className="text-[11px] text-white/70 italic">Summarizing...</div>
+                                        )}
+
+                                        {isPDF && summaries[index]?.text && (
+                                            <div className="text-[11px] text-white/90 bg-black/20 rounded-lg px-2 py-1.5 whitespace-pre-line">
+                                                {summaries[index].expanded || summaries[index].text.length <= 150
+                                                    ? summaries[index].text
+                                                    : `${summaries[index].text.slice(0, 150)}...`}
+                                                {summaries[index].text.length > 150 && (
+                                                    <button
+                                                        onClick={() => toggleSummaryExpand(index)}
+                                                        className="block mt-1 text-white/70 hover:text-white underline"
+                                                    >
+                                                        {summaries[index].expanded ? "Show less" : "Show more"}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {isPDF && summaries[index]?.error && (
+                                            <div className="text-[11px] text-red-200 bg-black/20 rounded-lg px-2 py-1.5">
+                                                {summaries[index].error}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>

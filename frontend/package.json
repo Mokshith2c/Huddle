@@ -22,7 +22,7 @@
     "axios": "^1.15.0",
     "http-status": "^2.1.0",
     "mapbox-gl": "^3.24.1",
-    "ngrok": "^5.0.0-beta.2",
+    "ngrok": "^4.3.3",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
