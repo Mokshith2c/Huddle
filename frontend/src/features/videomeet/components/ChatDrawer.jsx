@@ -164,27 +164,26 @@ export default function ChatDrawer({
                                                 ) : (
                                                     <i className="fa-solid fa-folder"></i>
                                                 )}
-                                                <a
-                                                    href={item.data.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="underline text-blue-200 ml-1 hover:text-blue-100"
-                                                >
-                                                    {item.data.name}
-                                                </a>
+                                                <span className="ml-1">{item.data.name}</span>
                                             </span>
                                         </div>
 
-                                        <button
-                                            onClick={() => handleDownload(item.data.url, item.data.name)}
-                                            className={
-                                            `flex items-center gap-1 text-[11px] opacity-90  text-white w-fit py-1 px-2 rounded-xl hover:opacity-100 transition-all duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-95
-                                            ${isOwn ? "bg-slate-800 hover:bg-slate-700" : "bg-gray-500 hover:bg-gray-600"}`
-                                            }
-                                        >
-                                            <i className="fa-solid fa-download"></i>
-                                            Download
-                                        </button>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => window.open(item.data.url, "_blank", "noopener,noreferrer")}
+                                                className="flex-1 flex items-center justify-center gap-1 text-[11px] text-white py-1.5 px-2 rounded-xl transition-all duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-95 bg-white/15 hover:bg-white/25"
+                                            >
+                                                <i className="fa-solid fa-up-right-from-square"></i>
+                                                Open
+                                            </button>
+                                            <button
+                                                onClick={() => handleDownload(item.data.url, item.data.name)}
+                                                className="flex-1 flex items-center justify-center gap-1 text-[11px] text-white py-1.5 px-2 rounded-xl transition-all duration-300 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-95 bg-violet-600 hover:bg-violet-500"
+                                            >
+                                                <i className="fa-solid fa-download"></i>
+                                                Download
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </div>

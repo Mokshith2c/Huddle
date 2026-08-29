@@ -44,8 +44,8 @@ export default function PreJoinScreen({
                         </div>
                     </div>
                     <div className="absolute bottom-3 left-3 right-3 space-y-1">
-                        {!videoAvailable && <p className="text-xs text-red-300"><i class="fa-solid fa-video-slash" style={{color: "rgb(255, 212, 59)"}}></i> Camera not available</p>}
-                        {!audioAvailable && <p className="text-xs text-red-300"><i class="fa-solid fa-microphone-slash" style={{color: "rgb(255, 212, 59)"}}></i> Microphone not available</p>}
+                        {!videoAvailable && <p className="text-xs text-red-300"><i className="fa-solid fa-video-slash" style={{color: "rgb(255, 212, 59)"}}></i> Camera not available</p>}
+                        {!audioAvailable && <p className="text-xs text-red-300"><i className="fa-solid fa-microphone-slash" style={{color: "rgb(255, 212, 59)"}}></i> Microphone not available</p>}
                     </div>
                 </div>
 

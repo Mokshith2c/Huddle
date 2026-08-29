@@ -57,6 +57,7 @@ export default function useVideoMeet() {
     const [screenAvailable, setScreenAvailable] = useState(false);
     const [whiteboard, setWhiteboard] = useState(false);
     const [messages, setMessages] = useState([]);
+    const [reactions, setReactions] = useState([]);
     const [message, setMessage] = useState("");
     const [newMessages, setNewMessages] = useState(0);
     const [askForUsername, setAskForUsername] = useState(true);
@@ -598,6 +599,15 @@ export default function useVideoMeet() {
 
         socket.on("chat-message", addMessage);
 
+        socket.on("reaction", (senderId, emoji) => {
+            const reactionId = `${senderId}-${Date.now()}-${Math.random()}`;
+            const randomLeft = Math.floor(Math.random() * 80) + 10;
+            setReactions((prev) => [...prev, { id: reactionId, senderId, emoji, left: randomLeft }]);
+            setTimeout(() => {
+                setReactions((prev) => prev.filter((r) => r.id !== reactionId));
+            }, 2500);
+        });
+
         socket.on("user-left", (id) => {
             setVideos((prevVideos) => prevVideos.filter((v) => v.socketId !== id));
             setParticipantNames((prevNames) => {
@@ -781,13 +791,16 @@ export default function useVideoMeet() {
         broadcastVideoState(videoRef.current);
     };
 
-    const isNarrowViewport = () => typeof window !== "undefined" && window.innerWidth < 768;
-
+    const isNarrowViewport = () =>
+        typeof window !== "undefined" && window.innerWidth < 768;
 
     const showWhiteboard = () => {
-        setWhiteboard((prev)=>{
+        setWhiteboard((prev) => {
             const next = !prev;
-            if(next && isNarrowViewport()){
+            // On narrow screens the whiteboard and chat both go full-width and
+            // stack, which can push the video grid and controls off-screen if
+            // both are open at once — so only allow one at a time there.
+            if (next && isNarrowViewport()) {
                 setShowModal(false);
             }
             return next;
@@ -797,13 +810,17 @@ export default function useVideoMeet() {
     const toggleChat = () => {
         setShowModal((prev) => {
             const next = !prev;
-            if(next && isNarrowViewport()){
+            if (next && isNarrowViewport()) {
                 setWhiteboard(false);
             }
             return next;
         });
         setNewMessages(0);
-    }
+    };
+
+    const sendReaction = (emoji) => {
+        socketRef.current?.emit("reaction", emoji);
+    };
 
     const connect = async () => {
         const safeUsername =
@@ -958,6 +975,7 @@ export default function useVideoMeet() {
         
         // Chat & Messaging
         messages,
+        reactions,
         message,
         setMessage,
         newMessages,
@@ -966,6 +984,7 @@ export default function useVideoMeet() {
         showModal,
         setShowModal,
         toggleChat,
+        sendReaction,
 
         // File Upload
         fileInputRef,

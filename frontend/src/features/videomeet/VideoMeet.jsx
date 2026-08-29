@@ -81,6 +81,20 @@ export default function VideoMeet() {
                         openLocationPreview={meet.openLocationPreview}
                     />
                 )}
+
+                {meet.reactions.length > 0 && (
+                    <div className="pointer-events-none absolute inset-0 z-50 overflow-hidden">
+                        {meet.reactions.map((r) => (
+                            <span
+                                key={r.id}
+                                className="animate-float-up absolute bottom-4 text-3xl sm:text-4xl"
+                                style={{ left: `${r.left}%` }}
+                            >
+                                {r.emoji}
+                            </span>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <ControlBar
@@ -97,6 +111,7 @@ export default function VideoMeet() {
                 toggleVideoBtn={meet.toggleVideoBtn}
                 toggleScreenBtn={meet.toggleScreenBtn}
                 showWhiteboard={meet.showWhiteboard}
+                sendReaction={meet.sendReaction}
                 handleEndCall={meet.handleEndCall}
             />
 

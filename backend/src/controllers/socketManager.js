@@ -238,6 +238,11 @@ export const connectToSocket = (server) => {
             io.to(socket.id).emit("whiteboard-update", whiteboardState[roomId] || []);
         })
 
+        socket.on("reaction", (emoji) => {
+            const roomId = socket.data.roomPath;
+            if(!roomId)return;
+            io.to(roomId).emit("reaction", socket.id, emoji);
+        })
 
         socket.on("chat-message", (data, sender) => {
             const matchingRoom = socket.data.roomPath;
