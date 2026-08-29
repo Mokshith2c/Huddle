@@ -53,7 +53,6 @@ export default function VideoMeet() {
                         <WhiteBoard 
                             showWB={meet.showWhiteboard} 
                             socket={meet.socket} 
-                            width={500} 
                         />
                     </div>
                 )}

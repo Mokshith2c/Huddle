@@ -11,6 +11,8 @@ function WhiteBoard({ socket, showWB }) {
   const cursorCanvasRef = useRef(null);
   const historyRef = useRef([]);
   const [color, setColor] = useState("#000000");
+  const [size, setSize] = useState(3);
+  const [isErasing, setIsErasing] = useState(false);
   const getPoint = (event) => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
@@ -118,6 +120,26 @@ function WhiteBoard({ socket, showWB }) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleKeyDown = (e) => {
+      const tag = document.activeElement?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "z") return;
+
+      e.preventDefault();
+      if (e.shiftKey) {
+        socket.emit("whiteboard-redo");
+      } else {
+        socket.emit("whiteboard-undo");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [socket]);
+
   const startDrawing = (e) => {
     drawingRef.current = true;
 
@@ -145,9 +167,12 @@ function WhiteBoard({ socket, showWB }) {
     const ctx = ctxRef.current;
     if (!canvas || !ctx) return;
 
+    const drawColor = isErasing ? "#ffffff" : color;
+
     const prev = currentStrokeRef.current[currentStrokeRef.current.length - 1];
     if (prev) {
-      ctx.strokeStyle = color;
+      ctx.strokeStyle = drawColor;
+      ctx.lineWidth = size;
       ctx.beginPath();
       ctx.moveTo(prev.x * canvas.clientWidth, prev.y * canvas.clientHeight);
       ctx.lineTo(x, y);
@@ -165,8 +190,8 @@ function WhiteBoard({ socket, showWB }) {
 
     if (currentStrokeRef.current.length > 1) {
       socket.emit("whiteboard-draw", {
-        color: color,
-        size: 3,
+        color: isErasing ? "#ffffff" : color,
+        size: size,
         points: currentStrokeRef.current
       });
     }
@@ -183,8 +208,8 @@ function WhiteBoard({ socket, showWB }) {
     ctx.clearRect(0, 0, cursorCanvas.width, cursorCanvas.height);
 
     ctx.beginPath();
-    ctx.arc(x, y, 5, 0, Math.PI * 2);
-    ctx.strokeStyle = color;
+    ctx.arc(x, y, Math.max(size / 2, 3), 0, Math.PI * 2);
+    ctx.strokeStyle = isErasing ? "#94a3b8" : color;
     ctx.lineWidth = 1;
     ctx.stroke();
   };
@@ -199,6 +224,7 @@ function WhiteBoard({ socket, showWB }) {
   };
 
   const clearDrawing = () => {
+    if (!window.confirm("Clear the whiteboard for everyone?")) return;
     socket.emit("whiteboard-clear");
   };
 
@@ -220,10 +246,11 @@ function WhiteBoard({ socket, showWB }) {
     link.download = "whiteboard.png"
     link.click()
   }
-
+  
   return (
+    
     <div className="w-full h-full flex flex-col gap-2 bg-slate-900 p-3 rounded-2xl">
-      <div className='flex justify-between items-center flex-shrink-0'>
+      <div className='flex flex-wrap justify-between items-center gap-y-2 flex-shrink-0'>
         <div>
           <button className='rounded-md bg-slate-800 px-3 py-1 text-xs text-slate-100 transition-all duration-200 ease-out hover:bg-slate-700 hover:-translate-y-0.5  active:translate-y-0 active:scale-95 mr-2'
             onClick={() => socket.emit("whiteboard-undo")}>
@@ -234,8 +261,40 @@ function WhiteBoard({ socket, showWB }) {
             <IoArrowRedo />
           </button>
         </div>
-        <input type="color" value={color}
-          onChange={(e) => setColor(e.target.value)} className='w-8 h-8 cursor-pointer' />
+        <div className='flex items-center gap-2'>
+          <div className='flex gap-1'>
+            {[
+              { label: "S", value: 2 },
+              { label: "M", value: 5 },
+              { label: "L", value: 10 }
+            ].map((preset) => (
+              <button
+                key={preset.value}
+                onClick={() => setSize(preset.value)}
+                className={`h-7 w-7 rounded-md text-[11px] font-semibold transition-all duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
+                  size === preset.value
+                    ? "bg-sky-600 text-white"
+                    : "bg-slate-800 text-slate-100 hover:bg-slate-700"
+                }`}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setIsErasing((prev) => !prev)}
+            className={`rounded-md px-3 py-1 text-xs transition-all duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
+              isErasing
+                ? "bg-sky-600 text-white"
+                : "bg-slate-800 text-slate-100 hover:bg-slate-700"
+            }`}
+          >
+            <i className="fa-solid fa-eraser"></i>
+          </button>
+          <input type="color" value={color}
+            onChange={(e) => { setColor(e.target.value); setIsErasing(false); }}
+            className='w-8 h-8 cursor-pointer' />
+        </div>
         <div className='flex gap-2 '>
           <button className="rounded-md bg-slate-800 px-3 py-1 text-xs text-slate-100 transition-all duration-200 ease-out hover:bg-slate-700 hover:-translate-y-0.5  active:translate-y-0 active:scale-95"
             onClick={clearDrawing}>
