@@ -60,7 +60,7 @@ export default function ChatDrawer({
     };
 
     return (
-        <div className="absolute inset-0 md:static md:w-90 md:flex-none md:h-auto md:max-h-full md:shrink-0 rounded-xl border border-slate-700/70 bg-slate-900/95 flex flex-col shadow-xl z-30 overflow-hidden">
+        <div className="absolute inset-0 md:static md:w-115 md:flex-none md:h-auto md:max-h-full md:shrink-0 rounded-xl border border-slate-700/70 bg-slate-900/95 flex flex-col shadow-xl z-30 overflow-hidden">
             <div className="p-3 border-b border-slate-700/70 font-semibold flex justify-between items-center bg-slate-900">
                 <div className="text-slate-100">Chat</div>
                 <button 

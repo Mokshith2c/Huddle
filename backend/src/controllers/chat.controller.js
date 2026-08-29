@@ -56,10 +56,7 @@ export const summarizePdf = async (req, res) => {
         const parser = new PDFParse({url: fileUrl});
         let result;
         try{
-            console.log(parser);
             result = await parser.getText();
-            console.log("Hi");
-            console.log(result);
         }finally{
             await parser.destroy();
         }
@@ -93,7 +90,6 @@ export const summarizePdf = async (req, res) => {
 
             Document:
             ${text.slice(0, 8000)}`;
-        console.log("before geminires")
         const geminiRes = await fetch(
             "https://generativelanguage.googleapis.com/v1beta/interactions",
             {
@@ -110,25 +106,17 @@ export const summarizePdf = async (req, res) => {
             }
         );
         
-        console.log("after geminires")
         if (!geminiRes.ok) {
             const errBody = await geminiRes.text();
             console.error("Gemini API error:", errBody);
             return res.status(502).json({ message: "Gemini is temporarily unavailable. Please try again" });
         }
         
-        //The .json() method is built into the Response object of the Fetch API.
-        // .json() parses the response body as JSON and returns a Promise that resolves to a JavaScript object.
         const geminiData = await geminiRes.json();
-        console.log("gemin Data - ");
-        console.log(geminiData);
-        // Match the official response parsing structure for Interactions
         const summary = geminiData?.steps
             ?.find(step => step.type === "model_output")
             ?.content?.find(item => item.type === "text")
             ?.text?.trim();
-        console.log("output");
-        console.log(summary);
 
         if (!summary) {
             return res.status(502).json({ message: "Summarization failed. Empty response from AI." });

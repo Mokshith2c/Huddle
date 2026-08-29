@@ -178,12 +178,9 @@ export const connectToSocket = (server) => {
             }
 
             if (strokeIndex !== -1) {
-                console.log(history);
                 //splice returns array, so [0] gives obj
                 const removedStroke = history.splice(strokeIndex, 1)[0];
-                console.log(removedStroke);
                 redoState[roomId].push({stroke: removedStroke, index: strokeIndex});
-                console.log(redoState);
                 if (redoState[roomId].length > 1000) {
                     redoState[roomId].shift();
                 }
