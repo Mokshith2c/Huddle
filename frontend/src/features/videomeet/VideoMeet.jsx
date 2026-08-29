@@ -49,7 +49,7 @@ export default function VideoMeet() {
                 />
 
                 {meet.whiteboard && (
-                    <div className="absolute inset-0 md:static md:w-125 md:flex-none md:h-[70vh] md:shrink-0 rounded-xl border border-slate-700/70 bg-slate-900/95 shadow-xl box-border flex flex-col z-20">
+                    <div className="absolute inset-0 md:static md:w-140 md:flex-none md:h-[75vh] md:shrink-0 rounded-xl border border-slate-700/70 bg-slate-900/95 shadow-xl box-border flex flex-col z-20">
                         <WhiteBoard 
                             showWB={meet.showWhiteboard} 
                             socket={meet.socket} 

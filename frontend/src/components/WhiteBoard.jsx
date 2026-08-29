@@ -1,7 +1,6 @@
 import React from 'react'
 import { useRef, useEffect, useState } from 'react';
-import { IoArrowUndo } from "react-icons/io5";
-import { IoArrowRedo } from "react-icons/io5";
+import { IoArrowUndo, IoArrowRedo } from "react-icons/io5";
 import { MdDownloadForOffline } from "react-icons/md";
 function WhiteBoard({ socket, showWB }) {
   const canvasRef = useRef(null);
@@ -11,8 +10,15 @@ function WhiteBoard({ socket, showWB }) {
   const cursorCanvasRef = useRef(null);
   const historyRef = useRef([]);
   const [color, setColor] = useState("#000000");
-  const [size, setSize] = useState(3);
+  const [size, setSize] = useState(4);
   const [isErasing, setIsErasing] = useState(false);
+  const [showSizePicker, setShowSizePicker] = useState(false);
+  const sizePresets = [
+    { label: "S", value: 2 },
+    { label: "M", value: 4 },
+    { label: "L", value: 8 }
+  ];
+  const strokeColor = isErasing ? "#ffffff" : color;
   const getPoint = (event) => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
@@ -167,11 +173,9 @@ function WhiteBoard({ socket, showWB }) {
     const ctx = ctxRef.current;
     if (!canvas || !ctx) return;
 
-    const drawColor = isErasing ? "#ffffff" : color;
-
     const prev = currentStrokeRef.current[currentStrokeRef.current.length - 1];
     if (prev) {
-      ctx.strokeStyle = drawColor;
+      ctx.strokeStyle = strokeColor;
       ctx.lineWidth = size;
       ctx.beginPath();
       ctx.moveTo(prev.x * canvas.clientWidth, prev.y * canvas.clientHeight);
@@ -190,7 +194,7 @@ function WhiteBoard({ socket, showWB }) {
 
     if (currentStrokeRef.current.length > 1) {
       socket.emit("whiteboard-draw", {
-        color: isErasing ? "#ffffff" : color,
+        color: strokeColor,
         size: size,
         points: currentStrokeRef.current
       });
@@ -246,10 +250,9 @@ function WhiteBoard({ socket, showWB }) {
     link.download = "whiteboard.png"
     link.click()
   }
-  
+
   return (
-    
-    <div className="w-full h-full flex flex-col gap-2 bg-slate-900 p-3 rounded-2xl">
+    <div className="w-full h-full flex flex-col gap-2 bg-slate-900 p-3">
       <div className='flex flex-wrap justify-between items-center gap-y-2 flex-shrink-0'>
         <div>
           <button className='rounded-md bg-slate-800 px-3 py-1 text-xs text-slate-100 transition-all duration-200 ease-out hover:bg-slate-700 hover:-translate-y-0.5  active:translate-y-0 active:scale-95 mr-2'
@@ -262,12 +265,42 @@ function WhiteBoard({ socket, showWB }) {
           </button>
         </div>
         <div className='flex items-center gap-2'>
-          <div className='flex gap-1'>
-            {[
-              { label: "S", value: 2 },
-              { label: "M", value: 5 },
-              { label: "L", value: 10 }
-            ].map((preset) => (
+          {/* Below sm: single toggle button showing the active size, opens a popover */}
+          <div className='relative sm:hidden'>
+            <button
+              onClick={() => setShowSizePicker((prev) => !prev)}
+              className="h-7 w-7 flex items-center justify-center rounded-md bg-slate-800 transition-all duration-200 ease-out hover:bg-slate-700 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+            >
+              <span
+                className="rounded-full bg-slate-100"
+                style={{ width: `${size + 4}px`, height: `${size + 4}px` }}
+              ></span>
+            </button>
+            {showSizePicker && (
+              <div className="absolute top-full left-0 mt-2 flex gap-1 rounded-md border border-slate-700/70 bg-slate-900/95 p-1 shadow-lg z-10">
+                {sizePresets.map((preset) => (
+                  <button
+                    key={preset.value}
+                    onClick={() => {
+                      setSize(preset.value);
+                      setShowSizePicker(false);
+                    }}
+                    className={`h-7 w-7 rounded-md text-[11px] font-semibold transition-all duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
+                      size === preset.value
+                        ? "bg-sky-600 text-white"
+                        : "bg-slate-800 text-slate-100 hover:bg-slate-700"
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* sm and up: all three size buttons shown inline */}
+          <div className='hidden sm:flex gap-1'>
+            {sizePresets.map((preset) => (
               <button
                 key={preset.value}
                 onClick={() => setSize(preset.value)}
