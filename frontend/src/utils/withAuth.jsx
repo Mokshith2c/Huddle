@@ -1,15 +1,16 @@
 import React, { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 function withAuth(WrappedComponent) {
 
     const AuthComponent = (props) => {
         const navigate = useNavigate();
+        const location = useLocation();
 
         useEffect(() => {
             const token = localStorage.getItem("token");
             if (!token) {
-                navigate("/auth");
+                navigate("/auth", {state: {from: location.pathname}});
                 return;
             }
 
@@ -17,13 +18,13 @@ function withAuth(WrappedComponent) {
                 const payload = JSON.parse(atob(token.split('.')[1]));
                 if (payload.exp * 1000 < Date.now()) {
                     localStorage.removeItem("token");
-                    navigate("/auth");
+                    navigate("/auth", {state: {from: location.pathname}});
                 }
             } catch (e) {
                 console.error("Token validation error:", e);
-                navigate("/auth");
+                navigate("/auth", {state: {from: location.pathname}});
             }
-        }, [navigate]);
+        }, [navigate, location.pathname]);
 
         return <WrappedComponent {...props} />;
     };

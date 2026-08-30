@@ -2,7 +2,7 @@ import * as React from "react";
 import axios from "axios";
 import httpStatus from "http-status";
 import { createContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate , useLocation} from "react-router-dom";
 
 const backendHost = import.meta.env.VITE_BACKEND_HOST || window.location.hostname;
 const backendPort = import.meta.env.VITE_BACKEND_PORT || "5000";
@@ -31,7 +31,7 @@ client.interceptors.response.use(
         if(error.response?.status === 401){
             localStorage.removeItem("token");
             if (navigateRef.current) {
-                navigateRef.current("/auth");
+                navigateRef.current("/auth", {state: {from: window.location.pathname}});
             } else {
                 window.location.href = "/auth";
             }
@@ -55,7 +55,13 @@ export const AuthProvider = ({ children }) => {
     const [password, setPassword] = React.useState("");
 
     const navigate = useNavigate();
+    const location = useLocation();
     navigateRef.current = navigate;
+
+    const redirectAfterAuth = () => {
+        const from = location.state?.from;
+        navigate(from || "/home", {replace: true});
+    }
 
     const showToast = (toastMessage, duration = 3000, type = "success") => {
         setMessage(toastMessage);
@@ -111,7 +117,7 @@ export const AuthProvider = ({ children }) => {
                     setName("");
                     setUsername("");
                     setPassword("");
-                    setTimeout(() => navigate("/home"), 500);
+                    setTimeout(() => redirectAfterAuth(), 500);
                 } catch (err) {
                     showToast("Account created. Please log in.", 4000, "success");
                     setError("");
@@ -126,7 +132,7 @@ export const AuthProvider = ({ children }) => {
                     setError("");
                     setUsername("");
                     setPassword("");
-                    setTimeout(() => navigate("/home"), 500);
+                    setTimeout(() => redirectAfterAuth(), 500);
                 } catch (err) {
                     const message = err.response?.data?.message || "Something went wrong";
                     showToast(message, 4000, "error");
