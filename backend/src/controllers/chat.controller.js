@@ -75,18 +75,17 @@ export const summarizePdf = async (req, res) => {
 
         const geminiModel = process.env.GEMINI_MODEL || "gemini-3.1-flash-lite";
         const prompt = `
-            Create a concise summary of this document using exactly 2-3 bullet points.
+            Summarize the following document in exactly 2-3 bullet points.
 
-            Each bullet must:
-            - Contain one distinct and important piece of information.
-            - Focus on the main purpose, key facts, requirements, decisions, findings, or conclusions.
-            - Include important dates, numbers, names, or actions when relevant.
-            - Be no more than 25 words.
-            - Avoid repetition and minor details.
-            - Do not add information that is not supported by the document.
-            - Start with "- ".
-
-            Return only the bullet points.
+            Rules:
+            - Capture the document's main purpose and most important information.
+            - Include key facts, requirements, decisions, findings, conclusions, dates, numbers, or actions when relevant.
+            - Each bullet must be no more than 25 words.
+            - Use only information explicitly stated in the document.
+            - Do not guess, infer, or invent information.
+            - Avoid minor details and repetition.
+            - Start every bullet with "- ".
+            - Return only the bullet points, with no introduction or conclusion.
 
             Document:
             ${text.slice(0, 8000)}`;

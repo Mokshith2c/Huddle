@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { MdOutlineScreenShare, MdOutlineStopScreenShare } from "react-icons/md";
 
-const REACTION_EMOJIS = ["👍", "❤️", "😂", "👏", "🎉"];
+const REACTION_EMOJIS = ["👍", "❤️", "😂", "👏", "🎉", "🔥", "👎", "😄"];
 
 export default function ControlBar({
     audio,

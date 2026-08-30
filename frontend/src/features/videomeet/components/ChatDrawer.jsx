@@ -117,7 +117,7 @@ export default function ChatDrawer({
                                     return (
                                         <div  
                                             className={`
-                                                    w-full max-w-[85%] sm:max-w-80 overflow-hidden border border-slate-600/50 bg-slate-800/90 shadow-md
+                                                     w-full max-w-60 overflow-hidden border border-slate-600/50 bg-slate-800/90 shadow-md
                                                     ${isOwn ? "rounded-2xl rounded-br-sm " : "rounded-2xl bg-slate-800"}
                                                 `}
                                         >
@@ -194,7 +194,7 @@ export default function ChatDrawer({
                                                 ) : (
                                                     <i className="fa-solid fa-folder"></i>
                                                 )}
-                                                <span className="ml-1">{item.data.name}</span>
+                                                <span className="mlml-1 wrap-anywhere">{item.data.name}</span>
                                             </span>
                                         </div>
 
@@ -233,8 +233,8 @@ export default function ChatDrawer({
                                             <div className="text-[11px] text-white/90 bg-black/20 rounded-lg px-2 py-1.5 whitespace-pre-line">
                                                 {summaries[index].expanded || summaries[index].text.length <= 150
                                                     ? summaries[index].text
-                                                    : `${summaries[index].text.slice(0, 150)}...`}
-                                                {summaries[index].text.length > 150 && (
+                                                    : `${summaries[index].text.slice(0, 130)}...`}
+                                                {summaries[index].text.length > 100 && (
                                                     <button
                                                         onClick={() => toggleSummaryExpand(index)}
                                                         className="block mt-1 text-white/70 hover:text-white underline"

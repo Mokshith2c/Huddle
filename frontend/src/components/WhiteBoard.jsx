@@ -252,7 +252,7 @@ function WhiteBoard({ socket, showWB }) {
   }
 
   return (
-    <div className="w-full h-full flex flex-col gap-2 bg-slate-900 p-3">
+    <div className="w-full h-full flex flex-col gap-2 bg-slate-900 p-3 rounded-full">
       <div className='flex flex-wrap justify-between items-center gap-y-2 flex-shrink-0'>
         <div>
           <button className='rounded-md bg-slate-800 px-3 py-1 text-xs text-slate-100 transition-all duration-200 ease-out hover:bg-slate-700 hover:-translate-y-0.5  active:translate-y-0 active:scale-95 mr-2'
