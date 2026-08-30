@@ -799,7 +799,7 @@ export default function useVideoMeet() {
             const next = !prev;
             // On narrow screens the whiteboard and chat both go full-width and
             // stack, which can push the video grid and controls off-screen if
-            // both are open at once — so only allow one at a time there.
+            // both are open at once so only allow one at a time there.
             if (next && isNarrowViewport()) {
                 setShowModal(false);
             }
