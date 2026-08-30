@@ -445,8 +445,16 @@ export default function useVideoMeet() {
             try {
                 const remoteDescription = new RTCSessionDescription(signal.sdp);
                 const isOffer = remoteDescription.type === "offer";
+                const offerCollision = isOffer && (connection._makingOffer || connection.signalingState !== "stable");
 
-                if (isOffer && connection.signalingState !== "stable") {
+                if (offerCollision && !isPolite(fromId)) {
+                    // Impolite peer: ignore the incoming offer and let our own offer win.
+                    // Any queued ICE candidates stay queued until the eventual answer arrives.
+                    return;
+                }
+
+                if (offerCollision) {
+                    // Polite peer: yield by rolling back our own pending offer.
                     await connection.setLocalDescription({ type: "rollback" });
                 }
                 await connection.setRemoteDescription(remoteDescription);
@@ -582,6 +590,8 @@ export default function useVideoMeet() {
         socket.on("signal", gotMessageFromServer);
         socket.on("connect_error", (err) => {
             console.error("Socket authentication/connection error:", err.message);
+            isConnectingRef.current = false;
+            socketRef.current = null;
             setMessages((prevMessages) => [
                 ...prevMessages,
                 { sender: "System", data: `Connection error: ${err.message}` }
@@ -589,6 +599,7 @@ export default function useVideoMeet() {
         });
 
         socket.on("connect", () => {
+            isConnectingRef.current = false;
             const safeDisplayName =
                 typeof displayName === "string" && displayName.trim()
                     ? displayName.trim()
@@ -859,6 +870,7 @@ export default function useVideoMeet() {
     const handleEndCall = () => {
         stopLocalStreamTracks();
 
+        isConnectingRef.current = false;
         if (socketRef.current) {
             socketRef.current.disconnect();
             socketRef.current = null;
@@ -966,12 +978,14 @@ export default function useVideoMeet() {
         handleEndCall,
         callStartedAt,
 
+        // Connections / Streams
         videos,
         participantVideoState,
         getParticipantName,
         localVideoRef,
         attachLocalVideo,
         
+        // Chat & Messaging
         messages,
         reactions,
         message,
@@ -985,15 +999,18 @@ export default function useVideoMeet() {
         sendReaction,
         socketIdRef,
 
+        // File Upload
         fileInputRef,
         triggerFilePicker,
         handleFileUpload,
         handleDownload,
 
+        // Whiteboard
         whiteboard,
         showWhiteboard,
         socket: socketRef.current,
 
+        // Location Sharing & Preview
         selectedLocation,
         locationPreviewVisible,
         sharingLocation,
