@@ -52,6 +52,10 @@ export default function useVideoMeet() {
         videoRef.current = video;
     }, [video]);
     const [audio, setAudio] = useState(false);
+    const audioRef = useRef(audio);
+    useEffect(() => {
+        audioRef.current = audio;
+    }, [audio]);
     const [screen, setScreen] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [screenAvailable, setScreenAvailable] = useState(false);
@@ -169,7 +173,7 @@ export default function useVideoMeet() {
         if (typeof name === "string" && name.trim()) {
             return name;
         }
-        return socketId;
+        return "Guest";
     };
 
     const addLocalTracksOnce = (socketId) => {
@@ -215,7 +219,6 @@ export default function useVideoMeet() {
 
                 const existingStream = existingIndex >= 0 ? prevVideos[existingIndex].stream : null;
                 const mergedStream = existingStream || new MediaStream();
-                const displayName = getParticipantName(socketId);
 
                 const incomingTracks = event.streams?.[0]?.getTracks() || (event.track ? [event.track] : []);
                 incomingTracks.forEach((track) => {
@@ -227,7 +230,7 @@ export default function useVideoMeet() {
 
                 if (existingIndex >= 0) {
                     const updatedVideos = prevVideos.map((video, index) =>
-                        index === existingIndex ? { ...video, stream: mergedStream, displayName } : video
+                        index === existingIndex ? { ...video, stream: mergedStream } : video
                     );
                     return updatedVideos;
                 }
@@ -236,7 +239,6 @@ export default function useVideoMeet() {
                     ...prevVideos,
                     {
                         socketId,
-                        displayName,
                         stream: mergedStream,
                         autoPlay: true,
                         playsinline: true
@@ -363,17 +365,19 @@ export default function useVideoMeet() {
     }, []);
 
     const getUserMedia = () => {
-        if (video || audio ){
-            navigator.mediaDevices.getUserMedia({ video: video, audio: audio })
+        const wantVideo = videoRef.current;
+        const wantAudio = audioRef.current;
+        if (wantVideo || wantAudio) {
+            navigator.mediaDevices.getUserMedia({ video: wantVideo, audio: wantAudio })
                 .then((stream) => {
-                    if(video) setVideoAvailable(true);
-                    if(audio) setAudioAvailable(true);
+                    if (wantVideo) setVideoAvailable(true);
+                    if (wantAudio) setAudioAvailable(true);
                     applyLocalStream(stream);
                 })
                 .catch((e) => {
                     console.log(e);
-                    if (video) setVideo(false);
-                    if (audio) setAudio(false);
+                    if (wantVideo) setVideo(false);
+                    if (wantAudio) setAudio(false);
                 })
         } else {
             try {
@@ -638,10 +642,6 @@ export default function useVideoMeet() {
             if (roomStartAt) {
                 setCallStartedAt(roomStartAt);
             }
-            setVideos((prevVideos) => prevVideos.map((v) => ({
-                ...v,
-                displayName: usersInRoom[v.socketId] || v.displayName
-            })));
 
             clients.forEach((socketListId) => {
                 if (socketListId === socketIdRef.current) {
@@ -833,18 +833,16 @@ export default function useVideoMeet() {
         socketRef.current?.emit("reaction", emoji);
     };
 
-    const connect = async () => {
+    const connect = () => {
         const safeDisplayName =
             typeof displayName === "string" && displayName.trim()
                 ? displayName.trim()
                 : "Guest";
 
-        try {
-            if (roomId?.trim()) {
-                await addToUserHistory(roomId.trim());
-            }
-        } catch (error) {
-            console.error("Failed to add meeting to history", error);
+        if (roomId?.trim()) {
+            addToUserHistory(roomId.trim()).catch((error) => {
+                console.error("Failed to add meeting to history", error);
+            });
         }
 
         setDisplayName(safeDisplayName);
