@@ -11,7 +11,7 @@ import MeetingTimer from "../../components/MeetingTimer";
 export default function VideoMeet() {
     const meet = useVideoMeet();
 
-    if (meet.askForUsername) {
+    if (meet.askForDisplayName) {
         return (
             <PreJoinScreen
                 roomId={meet.roomId}
@@ -22,8 +22,8 @@ export default function VideoMeet() {
                 setAudio={meet.setAudio}
                 videoAvailable={meet.videoAvailable}
                 audioAvailable={meet.audioAvailable}
-                username={meet.username}
-                setUsername={meet.setUsername}
+                displayName={meet.displayName}
+                setDisplayName={meet.setDisplayName}
                 connect={meet.connect}
             />
         );
@@ -33,7 +33,7 @@ export default function VideoMeet() {
         <div className="h-screen overflow-hidden bg-[radial-gradient(circle_at_20%_10%,#16263a_0%,#0b1117_45%,#090e14_100%)] text-slate-100 p-5 flex flex-col gap-5">
             <MeetingTimer
                 startAt={meet.callStartedAt}
-                isActive={!meet.askForUsername}
+                isActive={!meet.askForDisplayName}
                 className="self-start rounded-full border border-slate-700/70 bg-slate-900/80 px-3 py-1.5 text-xs font-medium text-slate-200 shadow"
             />
             
@@ -45,7 +45,7 @@ export default function VideoMeet() {
                     attachLocalVideo={meet.attachLocalVideo}
                     video={meet.video}
                     screen={meet.screen}
-                    username={meet.username}
+                    displayName={meet.displayName}
                 />
 
                 {meet.whiteboard && (
@@ -65,7 +65,8 @@ export default function VideoMeet() {
                         sendMessage={meet.sendMessage}
                         showModal={meet.showModal}
                         setShowModal={meet.setShowModal}
-                        username={meet.username}
+                        displayName={meet.displayName}
+                        mySocketId={meet.socketIdRef.current}
                         triggerFilePicker={meet.triggerFilePicker}
                         fileInputRef={meet.fileInputRef}
                         handleFileUpload={meet.handleFileUpload}

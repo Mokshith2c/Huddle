@@ -14,7 +14,7 @@ export default function LocationPreviewModal({
     closeLocationPreview,
     coordsCopied,
     copyLocationCoordinates,
-    username
+    displayName
 }) {
     const mapContainerRef = useRef(null);
     const mapRef = useRef(null);
@@ -92,7 +92,7 @@ export default function LocationPreviewModal({
                             </p>
                         )}
                         <p className="mt-2 text-xs text-slate-400">
-                            Shared by <span className="font-medium text-slate-200">{selectedLocation.sharedBy || username}</span>
+                            Shared by <span className="font-medium text-slate-200">{selectedLocation.sharedBy || displayName}</span>
                         </p>
                         <p className="mt-1 text-xs text-slate-400">
                             {formatSharedTime(selectedLocation.sharedAt)}
@@ -110,7 +110,7 @@ export default function LocationPreviewModal({
                     <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-slate-950/50 p-1.5 shadow-inner">
                         <div className="pointer-events-none absolute left-3 top-3 z-10 max-w-[min(18rem,calc(100%-1.5rem))] rounded-xl border border-white/10 bg-slate-900/80 p-3.5 shadow-lg backdrop-blur-md sm:left-4 sm:top-4 sm:max-w-xs sm:p-4">
                             <p className="text-xs text-slate-400">
-                                Shared by <span className="font-medium text-slate-200">{selectedLocation.sharedBy || username}</span>
+                                Shared by <span className="font-medium text-slate-200">{selectedLocation.sharedBy || displayName}</span>
                             </p>
                             <p className="mt-1.5 text-xs text-slate-400">
                                 {formatLocationCardTime(selectedLocation.sharedAt)}

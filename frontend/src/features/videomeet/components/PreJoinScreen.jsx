@@ -10,8 +10,8 @@ export default function PreJoinScreen({
     setAudio,
     videoAvailable,
     audioAvailable,
-    username,
-    setUsername,
+    displayName,
+    setDisplayName,
     connect
 }) {
     return (
@@ -52,9 +52,9 @@ export default function PreJoinScreen({
                 <div className="mb-6">
                     <label className="mb-2 block text-sm font-medium text-slate-300">Your Name</label>
                     <InputField
-                        placeholder="Enter your username"
-                        value={username}
-                        onChange={(event) => setUsername(event.target.value)}
+                        placeholder="Enter your name"
+                        value={displayName}
+                        onChange={(event) => setDisplayName(event.target.value)}
                         inputClassName="bg-slate-800 border-slate-700 text-white placeholder:text-slate-400 focus:border-sky-400 focus:ring-sky-500/30"
                     />
                 </div>
@@ -78,7 +78,7 @@ export default function PreJoinScreen({
 
                 <button 
                     onClick={connect}
-                    disabled={!username.trim()}
+                    disabled={!displayName.trim()}
                     className="w-full rounded-lg bg-linear-to-r from-sky-500 to-cyan-500 py-3 font-semibold text-white transition-all duration-200 hover:from-sky-400 hover:to-cyan-400 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 active:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
                 >
                     <i className="fa-solid fa-phone mr-2"></i>

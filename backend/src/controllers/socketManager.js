@@ -97,7 +97,7 @@ export const connectToSocket = (server) => {
     });
 
     io.on('connection', (socket) => {
-        socket.on('join-call', async (path, username) => {
+        socket.on('join-call', async (path, displayName) => {
             if (roomUsers[path] === undefined) {
                 roomUsers[path] = {}
             }
@@ -105,14 +105,14 @@ export const connectToSocket = (server) => {
                 roomStartTimes[path] = Date.now();
             }
             
-            const safeUsername =
-            typeof username === "string" && username.trim()
-            ? username.trim()
+            const safeDisplayName =
+            typeof displayName === "string" && displayName.trim()
+            ? displayName.trim()
             : "Guest";
             
             socket.join(path);
             socket.data.roomPath = path;
-            roomUsers[path][socket.id] = safeUsername;
+            roomUsers[path][socket.id] = safeDisplayName;
 
             const clientsInRoom = await io.in(path).fetchSockets();
             const clientIds = clientsInRoom.map((clientSocket) => clientSocket.id);

@@ -7,7 +7,7 @@ export default function VideoGrid({
     attachLocalVideo,
     video,
     screen,
-    username
+    displayName
 }) {
     return (
         <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] auto-rows-fr gap-4 flex-1 min-h-0">
@@ -75,7 +75,7 @@ export default function VideoGrid({
                     <div className="h-full w-full flex items-center justify-center bg-slate-800">
                         <div className="flex flex-col items-center">
                             <div className="h-16 w-16 rounded-full bg-sky-500 flex items-center justify-center text-xl font-bold text-white">
-                                {username?.charAt(0)?.toUpperCase() || "U"}
+                                {displayName?.charAt(0)?.toUpperCase() || "U"}
                             </div>
                         </div>
                     </div>

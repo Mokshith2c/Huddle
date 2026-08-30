@@ -20,7 +20,8 @@ export default function ChatDrawer({
     sendMessage,
     showModal,
     setShowModal,
-    username,
+    displayName,
+    mySocketId,
     triggerFilePicker,
     fileInputRef,
     handleFileUpload,
@@ -73,7 +74,7 @@ export default function ChatDrawer({
 
             <div className="chat-scroll flex-1 overflow-y-auto p-4 space-y-2 bg-slate-900/40">
                 {messages.map((item, index) => {
-                    const isOwn = item.sender === username;
+                    const isOwn = item.senderSocketId === mySocketId;
                     const isFile = typeof item.data === "object" && item.data.type === "file";
                     const isLocation = typeof item.data === "object" && item.data.type === "location";
 
@@ -305,7 +306,7 @@ export default function ChatDrawer({
                 closeLocationPreview={closeLocationPreview}
                 coordsCopied={coordsCopied}
                 copyLocationCoordinates={copyLocationCoordinates}
-                username={username}
+                displayName={displayName}
             />
         </div>
     );

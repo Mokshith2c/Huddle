@@ -27,7 +27,7 @@ export const parseMapboxGeocode = (features) => {
     return { placeName, city, country };
 };
 
-export const buildLocationPayload = ({ latitude, longitude, accuracy, username, geocodeResult }) => {
+export const buildLocationPayload = ({ latitude, longitude, accuracy, displayName, geocodeResult }) => {
     const { placeName, city, country } = geocodeResult || {};
     const roundedAccuracy = Number.isFinite(accuracy) ? Math.round(accuracy) : null;
     const coordinateLabel = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
@@ -41,7 +41,7 @@ export const buildLocationPayload = ({ latitude, longitude, accuracy, username, 
         country: country || null,
         accuracy: roundedAccuracy,
         label: placeName || coordinateLabel,
-        sharedBy: username,
+        sharedBy: displayName,
         sharedAt: Date.now()
     };
 };

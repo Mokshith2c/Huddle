@@ -60,8 +60,8 @@ export default function useVideoMeet() {
     const [reactions, setReactions] = useState([]);
     const [message, setMessage] = useState("");
     const [newMessages, setNewMessages] = useState(0);
-    const [askForUsername, setAskForUsername] = useState(true);
-    const [username, setUsername] = useState(() => {
+    const [askForDisplayName, setAskForDisplayName] = useState(true);
+    const [displayName, setDisplayName] = useState(() => {
         const token = localStorage.getItem("token");
         if (!token) return "";
         try {
@@ -227,7 +227,7 @@ export default function useVideoMeet() {
 
                 if (existingIndex >= 0) {
                     const updatedVideos = prevVideos.map((video, index) =>
-                        index === existingIndex ? { ...video, stream: mergedStream, username: displayName } : video
+                        index === existingIndex ? { ...video, stream: mergedStream, displayName } : video
                     );
                     return updatedVideos;
                 }
@@ -236,7 +236,7 @@ export default function useVideoMeet() {
                     ...prevVideos,
                     {
                         socketId,
-                        username: displayName,
+                        displayName,
                         stream: mergedStream,
                         autoPlay: true,
                         playsinline: true
@@ -348,11 +348,11 @@ export default function useVideoMeet() {
     };
 
     useEffect(() => {
-        if(!askForUsername)return;
+        if(!askForDisplayName)return;
         if (video !== undefined && audio !== undefined) {
             getUserMedia();
         }
-    }, [video, audio, askForUsername]);
+    }, [video, audio, askForDisplayName]);
 
     useEffect(() => {
         return () => {
@@ -482,7 +482,7 @@ export default function useVideoMeet() {
     const addMessage = (data, sender, socketIdSender) => {
         setMessages((prevMessages) => [
             ...prevMessages,
-            { sender: sender, data: data }
+            { sender: sender, data: data, senderSocketId: socketIdSender }
         ]);
         if (!showModalRef.current && socketIdSender !== socketIdRef.current) {
             setNewMessages((prevMessages) => prevMessages + 1);
@@ -540,11 +540,11 @@ export default function useVideoMeet() {
                     latitude,
                     longitude,
                     accuracy,
-                    username,
+                    displayName,
                     geocodeResult
                 });
 
-                socketRef.current.emit("chat-message", locationPayload, username);
+                socketRef.current.emit("chat-message", locationPayload, displayName);
                 setSharingLocation(false);
             },
             (error) => {
@@ -589,11 +589,11 @@ export default function useVideoMeet() {
         });
 
         socket.on("connect", () => {
-            const safeUsername =
-                typeof username === "string" && username.trim()
-                    ? username.trim()
+            const safeDisplayName =
+                typeof displayName === "string" && displayName.trim()
+                    ? displayName.trim()
                     : "Guest";
-            socket.emit("join-call", roomId, safeUsername);
+            socket.emit("join-call", roomId, safeDisplayName);
             socketIdRef.current = socket.id;
         });
 
@@ -629,7 +629,7 @@ export default function useVideoMeet() {
             }
             setVideos((prevVideos) => prevVideos.map((v) => ({
                 ...v,
-                username: usersInRoom[v.socketId] || v.username
+                displayName: usersInRoom[v.socketId] || v.displayName
             })));
 
             clients.forEach((socketListId) => {
@@ -823,9 +823,9 @@ export default function useVideoMeet() {
     };
 
     const connect = async () => {
-        const safeUsername =
-            typeof username === "string" && username.trim()
-                ? username.trim()
+        const safeDisplayName =
+            typeof displayName === "string" && displayName.trim()
+                ? displayName.trim()
                 : "Guest";
 
         try {
@@ -836,8 +836,8 @@ export default function useVideoMeet() {
             console.error("Failed to add meeting to history", error);
         }
 
-        setUsername(safeUsername);
-        setAskForUsername(false);
+        setDisplayName(safeDisplayName);
+        setAskForDisplayName(false);
         connectToSocketServer();
     };
 
@@ -848,7 +848,7 @@ export default function useVideoMeet() {
         if (!trimmedMessage) return;
         if (!socket || !socket.connected) return;
 
-        socket.emit("chat-message", trimmedMessage, username);
+        socket.emit("chat-message", trimmedMessage, displayName);
         setMessage("");
     };
 
@@ -902,7 +902,7 @@ export default function useVideoMeet() {
                 name: fileData.originalName,
                 url: fileData.url
             };
-            socket.emit("chat-message", chatPayload, username);
+            socket.emit("chat-message", chatPayload, displayName);
         } catch (error) {
             const uploadMessage =
                 error?.response?.data?.message ||
@@ -959,21 +959,19 @@ export default function useVideoMeet() {
         // Room states/actions
         roomId,
         inviteLink,
-        username,
-        setUsername,
-        askForUsername,
+        displayName,
+        setDisplayName,
+        askForDisplayName,
         connect,
         handleEndCall,
         callStartedAt,
 
-        // Connections / Streams
         videos,
         participantVideoState,
         getParticipantName,
         localVideoRef,
         attachLocalVideo,
         
-        // Chat & Messaging
         messages,
         reactions,
         message,
@@ -987,18 +985,15 @@ export default function useVideoMeet() {
         sendReaction,
         socketIdRef,
 
-        // File Upload
         fileInputRef,
         triggerFilePicker,
         handleFileUpload,
         handleDownload,
 
-        // Whiteboard
         whiteboard,
         showWhiteboard,
         socket: socketRef.current,
 
-        // Location Sharing & Preview
         selectedLocation,
         locationPreviewVisible,
         sharingLocation,
