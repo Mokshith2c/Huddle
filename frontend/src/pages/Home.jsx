@@ -23,7 +23,6 @@ function Home() {
 	const [codeError, setCodeError] = useState("");
 	const [isChecking, setIsChecking] = useState(false);
 	const [isAvailable, setIsAvailable] = useState(null); // null=unchecked, true=free, false=taken
-	const debounceRef = useRef(null);
 	const {showToast, handleLogout } = useContext(AuthContext);
 	const normalizedCode = meetingCode.trim();
 	const inviteLink = normalizedCode ? `${window.location.origin}/${encodeURIComponent(normalizedCode)}` : "";
@@ -102,18 +101,20 @@ function Home() {
 	useEffect(() => {
 		if (mode !== 1) return;
 		const code = meetingCode.trim();
+
 		if (!code) {
 			setIsAvailable(null);
 			setCodeError("");
 			return;
 		}
-		clearTimeout(debounceRef.current);
+
+		let isCurrent = true;
 		setIsChecking(true);
-		debounceRef.current = setTimeout(async () => {
+
+		const timer = setTimeout(async () => {
 			try {
-				const res = await fetch(`${server_url}/api/v1/users/check-room/${encodeURIComponent(code)}`, {cache: "no-store"});
-				const data = await res.json();
-				const roomExists = Boolean(data.exists || data.active);
+				const roomExists = await checkRoomExists(code);
+				if (!isCurrent) return;
 				if (roomExists) {
 					setIsAvailable(false);
 					setCodeError("Meeting code is already in use. Try a different one.");
@@ -122,15 +123,30 @@ function Home() {
 					setCodeError("");
 				}
 			} catch {
+				if (!isCurrent) return;
 				setIsAvailable(null);
 				setCodeError("");
 			} finally {
-				setIsChecking(false);
+				if (isCurrent) setIsChecking(false);
 			}
 		}, 500);
-		return () => clearTimeout(debounceRef.current);
+
+		return () => {
+			clearTimeout(timer);
+			isCurrent = false;
+		};
 	}, [meetingCode, mode]);
 
+	const checkRoomExists = async (code) => {
+		try {
+			const res = await fetch(`${server_url}/api/v1/users/check-room/${encodeURIComponent(code)}`, { cache: "no-store" });
+			const data = await res.json();
+			return Boolean(data.exists || data.active);
+		} catch (err) {
+			console.error("Room check failed", err);
+			return null;
+		}
+	};
 	const checkRoomAndCreate = async () => {
 		let code = meetingCode.trim();
 		if (mode === 1 && code.length === 0) {
@@ -143,16 +159,9 @@ function Home() {
 		}
 
 		setIsChecking(true);
-		let roomExists = false;
-		try {
-			const res = await fetch(`${server_url}/api/v1/users/check-room/${encodeURIComponent(code)}`, {cache: "no-store"});
-			const data = await res.json();
-			roomExists = Boolean(data.exists || data.active);
-		} catch (err) {
-			console.error("Room check failed", err);
-		} finally {
-			setIsChecking(false);
-		}
+		const roomExists = await checkRoomExists(code);
+		setIsChecking(false);
+		
 
 		if (mode === 1 && roomExists) {
 			setCodeError("Meeting code is already in use. Try a different one.");
