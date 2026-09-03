@@ -62,14 +62,14 @@ export default function PreJoinScreen({
                 <div className="mb-4 flex gap-3">
                     <button
                         onClick={() => setVideo(!video)}
-                        className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 font-medium transition-all duration-200 ${video ? 'bg-slate-700 hover:bg-slate-600' : 'bg-red-500/20 hover:bg-red-500/30 text-red-300'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${video ? 'bg-slate-700 hover:bg-slate-600' : 'bg-red-500/20 hover:bg-red-500/30 text-red-300'}`}
                     >
                         <i className={`fa-solid ${video ? 'fa-video' : 'fa-video-slash'}`}></i>
                         {video ? 'Video On' : 'Video Off'}
                     </button>
                     <button
                         onClick={() => setAudio(!audio)}
-                        className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 font-medium transition-all duration-200 ${audio ? 'bg-slate-700 hover:bg-slate-600' : 'bg-red-500/20 hover:bg-red-500/30 text-red-300'}`}
+                        className={`flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 font-medium transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${audio ? 'bg-slate-700 hover:bg-slate-600' : 'bg-red-500/20 hover:bg-red-500/30 text-red-300'}`}
                     >
                         <i className={`fa-solid ${audio ? 'fa-microphone' : 'fa-microphone-slash'}`}></i>
                         {audio ? 'Audio On' : 'Audio Off'}

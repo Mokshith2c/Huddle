@@ -26,6 +26,9 @@ export default function VideoGrid({
                                 if (!ref) return;
                                 if (vid.stream && ref.srcObject !== vid.stream) {
                                     ref.srcObject = vid.stream;
+                                    ref.play().catch((e) => {
+                                        console.error("Remote audio playback was blocked:", e);
+                                    });
                                 }
                             }}
                         />

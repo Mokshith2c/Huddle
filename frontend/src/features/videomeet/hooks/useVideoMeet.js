@@ -217,16 +217,22 @@ export default function useVideoMeet() {
                     (video) => video.socketId === socketId
                 );
 
-                const existingStream = existingIndex >= 0 ? prevVideos[existingIndex].stream : null;
-                const mergedStream = existingStream || new MediaStream();
+                const existingTracks = existingIndex >= 0 ? prevVideos[existingIndex].stream.getTracks() : [];
 
                 const incomingTracks = event.streams?.[0]?.getTracks() || (event.track ? [event.track] : []);
+                const allTracks = [...existingTracks];
                 incomingTracks.forEach((track) => {
-                    const alreadyAdded = mergedStream.getTracks().some((t) => t.id === track.id);
+                    const alreadyAdded = allTracks.some((t) => t.id === track.id);
                     if (!alreadyAdded) {
-                        mergedStream.addTrack(track);
+                        allTracks.push(track);
                     }
                 });
+
+                // Always a fresh MediaStream instance, even when reusing tracks —
+                // mutating the existing object in place wouldn't change its
+                // reference, so an element already bound to it (via srcObject)
+                // would never notice a track was added.
+                const mergedStream = new MediaStream(allTracks);
 
                 if (existingIndex >= 0) {
                     const updatedVideos = prevVideos.map((video, index) =>
@@ -320,30 +326,23 @@ export default function useVideoMeet() {
     const getPermissions = async () => {
         let isVideoAvailable = false;
         let isAudioAvailable = false;
- 
+
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            isVideoAvailable = stream.getVideoTracks().length > 0;
-            isAudioAvailable = stream.getAudioTracks().length > 0;
-            stream.getTracks().forEach((track) => track.stop());
+            const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            isVideoAvailable = true;
+            videoStream.getTracks().forEach((track) => track.stop());
         } catch {
-            try {
-                const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
-                isVideoAvailable = true;
-                videoStream.getTracks().forEach((track) => track.stop());
-            } catch {
-                isVideoAvailable = false;
-            }
- 
-            try {
-                const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                isAudioAvailable = true;
-                audioStream.getTracks().forEach((track) => track.stop());
-            } catch {
-                isAudioAvailable = false;
-            }
+            isVideoAvailable = false;
         }
- 
+
+        try {
+            const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            isAudioAvailable = true;
+            audioStream.getTracks().forEach((track) => track.stop());
+        } catch {
+            isAudioAvailable = false;
+        }
+
         setVideoAvailable(isVideoAvailable);
         setAudioAvailable(isAudioAvailable);
         setScreenAvailable(!!navigator.mediaDevices.getDisplayMedia);
@@ -364,21 +363,35 @@ export default function useVideoMeet() {
         };
     }, []);
 
-    const getUserMedia = () => {
+    const getUserMedia = async () => {
         const wantVideo = videoRef.current;
         const wantAudio = audioRef.current;
         if (wantVideo || wantAudio) {
-            navigator.mediaDevices.getUserMedia({ video: wantVideo, audio: wantAudio })
-                .then((stream) => {
-                    if (wantVideo) setVideoAvailable(true);
-                    if (wantAudio) setAudioAvailable(true);
-                    applyLocalStream(stream);
-                })
-                .catch((e) => {
-                    console.log(e);
-                    if (wantVideo) setVideo(false);
-                    if (wantAudio) setAudio(false);
-                })
+            const [videoResult, audioResult] = await Promise.all([
+                wantVideo
+                    ? navigator.mediaDevices.getUserMedia({ video: true }).catch((e) => { console.log(e); return null; })
+                    : Promise.resolve(null),
+                wantAudio
+                    ? navigator.mediaDevices.getUserMedia({ audio: true }).catch((e) => { console.log(e); return null; })
+                    : Promise.resolve(null),
+            ]);
+
+            const tracks = [];
+            if (videoResult) {
+                setVideoAvailable(true);
+                tracks.push(...videoResult.getVideoTracks());
+            } else if (wantVideo) {
+                setVideo(false);
+            }
+
+            if (audioResult) {
+                setAudioAvailable(true);
+                tracks.push(...audioResult.getAudioTracks());
+            } else if (wantAudio) {
+                setAudio(false);
+            }
+
+            applyLocalStream(tracks.length > 0 ? new MediaStream(tracks) : createEmptyStream());
         } else {
             try {
                 let tracks = localVideoRef.current?.srcObject?.getTracks?.() || [];
@@ -674,44 +687,71 @@ export default function useVideoMeet() {
 
     const toggleAudioBtn = () => {
         const realAudioTrack = localStreamRef.current?.getAudioTracks?.()
-        .find((track) => track.readyState === "live" && track.label);
+        .find((track) => track.readyState === "live" && track.label && !track._synthetic);
         
         if(audio){
             if(realAudioTrack)realAudioTrack.enabled=false;
             setAudio(false);
             return;
         }
-        if (realAudioTrack) {
-            realAudioTrack.enabled = true;
-            setAudio(true);
-            return;
-        }
- 
+
+        // Turning audio on — always re-check current mic permission first.
+        // A track acquired earlier in the call can still look "live" here
+        // even after the browser permission is revoked mid-call, since
+        // enabling a track is a local flag with no bearing on whether the
+        // browser still allows access.
         navigator.mediaDevices.getUserMedia({ audio: true })
-            .then((stream) => {
-                const newAudioTrack = stream.getAudioTracks()[0];
+            .then((probeStream) => {
+                if (realAudioTrack) {
+                    // Permission is still valid — reuse the existing track
+                    // (avoids a renegotiation) and discard the probe stream.
+                    probeStream.getTracks().forEach((track) => track.stop());
+                    realAudioTrack.enabled = true;
+                    setAudioAvailable(true);
+                    setAudio(true);
+                    return;
+                }
+
+                const newAudioTrack = probeStream.getAudioTracks()[0];
                 const currentVideoTracks = localStreamRef.current?.getVideoTracks?.() || [];
                 const combinedStream = new MediaStream([...currentVideoTracks, newAudioTrack]);
- 
+
                 const oldAudioTracks = localStreamRef.current?.getAudioTracks?.() || [];
                 oldAudioTracks.forEach((track) => {
                     try { track.stop(); } catch (e) { console.log(e); }
                 });
- 
+
                 applyLocalStream(combinedStream);
                 setAudioAvailable(true);
                 setAudio(true);
             })
             .catch((e) => {
                 console.log("Failed to enable audio:", e);
+                setAudioAvailable(false);
             });
     };
 
     const toggleVideoBtn = () => {
         if (!video) {
-            navigator.mediaDevices.getUserMedia({ video: true, audio: audio })
+            if (screen) {
+                // Switching to camera while sharing — stop the screen capture
+                // instead of leaving it orphaned (still live, still shown by
+                // the browser's sharing indicator, but no longer sent to anyone).
+                stopScreenShare();
+                setScreen(false);
+            }
+            navigator.mediaDevices.getUserMedia({ video: true })
                 .then((stream) => {
-                    applyLocalStream(stream);
+                    const newVideoTrack = stream.getVideoTracks()[0];
+                    const currentAudioTracks = localStreamRef.current?.getAudioTracks?.() || [];
+                    const combinedStream = new MediaStream([newVideoTrack, ...currentAudioTracks]);
+
+                    const oldVideoTracks = localStreamRef.current?.getVideoTracks?.() || [];
+                    oldVideoTracks.forEach((track) => {
+                        try { track.stop(); } catch (e) { console.log(e); }
+                    });
+
+                    applyLocalStream(combinedStream);
                     setVideo(true);
                     setVideoAvailable(true);
                     broadcastVideoState(true);
@@ -720,6 +760,14 @@ export default function useVideoMeet() {
                     console.log("Failed to start video:", e);
                 });
         } else {
+            if (screen) {
+                // The live video track right now is the screen-share track, not
+                // a camera track — leave the ongoing share running and just
+                // remember not to resume the camera once sharing ends.
+                setVideo(false);
+                return;
+            }
+
             const currentVideoTracks = localStreamRef.current?.getVideoTracks?.() || [];
             const currentAudioTrack = localStreamRef.current?.getAudioTracks?.()[0] || null;
             const outgoingTracks = [black()];
