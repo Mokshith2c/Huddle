@@ -220,7 +220,6 @@ export const AuthProvider = ({ children }) => {
         handleAuth,
         handleLogout,
         isSubmitting,
-        error,
         isSignup,
         setIsSignup,
         name,
