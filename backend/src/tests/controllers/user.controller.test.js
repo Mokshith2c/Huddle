@@ -42,7 +42,7 @@ describe("login()", ()=>{
         });
         expect(res.status).toHaveBeenCalledWith(404);
         expect(res.json).toHaveBeenCalledWith({
-            message: "User not found"
+            message: "We couldn't find an account with those details."
         });
     })
 
@@ -75,7 +75,7 @@ describe("login()", ()=>{
         );
         expect(res.status).toHaveBeenCalledWith(401);
         expect(res.json).toHaveBeenCalledWith({
-            message: "Invalid password"
+            message: "Invalid username or password. Please try again."
         });
     })
     test("should return 200 for successful login", async() => {
@@ -115,13 +115,25 @@ describe("login()", ()=>{
         expect(res.status).toHaveBeenCalledWith(200);
         expect(res.json).toHaveBeenCalledWith({
             token: "fake-token",
-            message: "Login Successful"
+            message: "👋Welcome back! Ready to connect"
         })
     })
+    test("should return 500 if an unexpected error is thrown", async () => {
+        User.findOne = jest.fn().mockRejectedValue(new Error("DB down"));
+        const req = { body: { username: "mokshith", password: "123456" } };
+        const res = buildRes();
+ 
+        await login(req, res);
+ 
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({
+            message: "Something went wrong on our end. Please try again."
+        });
+    });
 });
 
 describe("register()", ()=>{
-    test("should return 401 on conflicting username", async() => {
+    test("should return 409 on conflicting username", async() => {
         User.findOne = jest.fn();
         User.findOne.mockResolvedValue({
             username: "mokshith"
@@ -143,7 +155,7 @@ describe("register()", ()=>{
         });
         expect(res.status).toHaveBeenCalledWith(409);
         expect(res.json).toHaveBeenCalledWith({
-            message: "User already exists"
+            message: "That username is already taken. Try another one."
         });
     })
     test("should register a new user successfully", async () => {
@@ -199,7 +211,7 @@ describe("register()", ()=>{
 
         expect(res.json).toHaveBeenCalledWith({
             token: "fake-token",
-            message: "User Registered Successfully"
+            message: "You're all set! Welcome to Huddle."
         });
     });
     test("should return 500 if database throws an error", async () => {
@@ -231,7 +243,7 @@ describe("register()", ()=>{
         );
 
         expect(res.json).toHaveBeenCalledWith({
-            message: "Error: Database Error"
+            message: "Something went wrong on our end. Please try again."
         });
     });
 })
