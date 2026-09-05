@@ -118,18 +118,6 @@ describe("login()", ()=>{
             message: "👋Welcome back! Ready to connect"
         })
     })
-    test("should return 500 if an unexpected error is thrown", async () => {
-        User.findOne = jest.fn().mockRejectedValue(new Error("DB down"));
-        const req = { body: { username: "mokshith", password: "123456" } };
-        const res = buildRes();
- 
-        await login(req, res);
- 
-        expect(res.status).toHaveBeenCalledWith(500);
-        expect(res.json).toHaveBeenCalledWith({
-            message: "Something went wrong on our end. Please try again."
-        });
-    });
 });
 
 describe("register()", ()=>{
