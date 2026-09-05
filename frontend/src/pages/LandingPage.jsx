@@ -3,13 +3,25 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../contexts/AuthContext";
+import { toast } from 'robot-toast';
+import { base2, error as errorRobot , wave} from 'robot-toast/robots';
 const LandingPage = () => {
   const navigate = useNavigate();
-  const { showToast, handleLogout } = useContext(AuthContext);
+  const { handleLogout } = useContext(AuthContext);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleGuestClick = () => {
-  showToast("Sneaky move... 😏, Sign in First", 2500);
+  toast({
+          message: "Sneaky move... 😏, Sign in First",
+          position: "bottom-left",
+          type: "info",
+          theme: "dark",
+          robotVariant: wave,
+          style: { color: "white", backgroundColor: "oklch(21% 0.034 264.665)", },
+          autoClose: 3000,
+          draggable: true,
+          pauseOnHover: true
+        });
 
     setTimeout(() => {
       navigate("/auth");
@@ -21,6 +33,17 @@ const LandingPage = () => {
   const server_url = `${backendProtocol}://${backendHost}:${backendPort}`;
   useEffect(() => {
     const wakeServer = async () => {
+        toast({
+          message: "Welcome to Huddle!",
+          position: "bottom-left",
+          type: "info",
+          theme: "dark",
+          robotVariant: base2,
+          style: { color: "white", backgroundColor: "oklch(21% 0.034 264.665)", },
+          autoClose: 2700,
+          draggable: true,
+          pauseOnHover: true
+        });
           try {
               await fetch(`${server_url}/health`);
           } catch {

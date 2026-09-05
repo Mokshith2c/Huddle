@@ -2,15 +2,19 @@ import { useState } from "react";
 import { AuthContext } from "../contexts/AuthContext";
 import InputField from "./InputField";
 import * as React from "react";
+import { toast } from 'robot-toast';
+import { shock, error as errorRobot } from 'robot-toast/robots';
+import Loader from "../components/Loader"
 
 const SignUpForm = () => {
-  const { handleAuth, name, username, password, setName, setUsername, setPassword, showToast, isSubmitting } = React.useContext(AuthContext);
+  const { handleAuth, name, username, password, setName, setUsername, setPassword, isSubmitting } = React.useContext(AuthContext);
   const [validationErrors, setValidationErrors] = useState({});
 
   const validateForm = () => {
     const errors = {};
-    if (!name || name.trim().length === 0) errors.name = "Name is required";
-    else if (name.length < 2) errors.name = "Name must be at least 2 characters";
+    const trimmedName = name.trim();
+    if (!trimmedName || trimmedName.length === 0) errors.name = "Name is required";
+    else if (trimmedName.length < 2) errors.name = "Name must be at least 2 characters";
     
     if (!username || username.trim().length === 0) errors.username = "Username is required";
     else if (username.length < 3) errors.username = "Username must be at least 3 characters";
@@ -35,8 +39,18 @@ const SignUpForm = () => {
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
-      const firstError = Object.values(errors)[0];
-      showToast(firstError, 3000, "error");
+      const firstError = Object.values(errors)[0] || "Something went wrong";
+      toast({
+        message: firstError,
+        position: "bottom-left",
+        type: "info",
+        theme: "dark",
+        robotVariant: errorRobot,
+        style: { color: "white", backgroundColor: "oklch(21% 0.034 264.665)", },
+        autoClose: 3000,
+        draggable: true,
+        pauseOnHover: true
+      });
       return;
     }
     setValidationErrors({});
@@ -67,7 +81,7 @@ const SignUpForm = () => {
         className="w-full py-3 rounded-lg bg-linear-to-r from-sky-600 to-cyan-500 text-white font-medium text-sm hover:from-sky-500 hover:to-cyan-400 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(14,165,233,0.28)] active:translate-y-0 transition-all duration-200 
         disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none flex items-center justify-center gap-2"
       >
-        {isSubmitting && <i className="fa-solid fa-spinner fa-spin"></i>}
+        {isSubmitting && <Loader type="ring" size={18} speed={2} color={"white"} />}
         {isSubmitting ? "Signing up..." : "Sign Up"}
       </button> 
     </div>

@@ -7,6 +7,9 @@ import { Link } from 'react-router-dom';
 import { QRCodeSVG } from "qrcode.react";
 import "./Home.css";
 import { AuthContext } from '../contexts/AuthContext';
+import { toast } from 'robot-toast';
+import { shock, error as errorRobot , wave} from 'robot-toast/robots';
+import Loader from "../components/Loader.jsx";
 
 const backendHost = import.meta.env.VITE_BACKEND_HOST || window.location.hostname;
 const backendPort = import.meta.env.VITE_BACKEND_PORT || "5000";
@@ -23,7 +26,7 @@ function Home() {
 	const [codeError, setCodeError] = useState("");
 	const [isChecking, setIsChecking] = useState(false);
 	const [isAvailable, setIsAvailable] = useState(null); // null=unchecked, true=free, false=taken
-	const {showToast, handleLogout } = useContext(AuthContext);
+	const {handleLogout } = useContext(AuthContext);
 	const normalizedCode = meetingCode.trim();
 	const inviteLink = normalizedCode ? `${window.location.origin}/${encodeURIComponent(normalizedCode)}` : "";
 	const handleCreate = () => {
@@ -50,12 +53,34 @@ function Home() {
 		if (!inviteLink) return;
 		try {
 			await navigator.clipboard.writeText(inviteLink);
-			showToast("Invite link copied");
+			toast({
+					message: "Invite link copied",
+					position: "bottom-left",
+					type: "info",
+					theme: "dark",
+					robotVariant: wave,
+					style: { color: "white", backgroundColor: "oklch(21% 0.034 264.665)", },
+					autoClose: 2000,
+					typeSpeed: 20,
+					draggable: true,
+					pauseOnHover: true
+			});
+
 			setCopied(true);
 			setTimeout(() => setCopied(false), 2000);
 		} catch (error) {
 			console.error("Copy invite failed", error);
-			showToast("Unable to copy link", 3000, "error");
+			toast({
+					message: "Unable to copy link",
+					position: "bottom-left",
+					type: "info",
+					theme: "dark",
+					robotVariant: errorRobot,
+					style: { color: "white", backgroundColor: "oklch(21% 0.034 264.665)", },
+					autoClose: 3000,
+					draggable: true,
+					pauseOnHover: true
+			});
 		}
 	};
 
@@ -154,7 +179,6 @@ function Home() {
 			setMeetingCode(code);
 		}
 		if (code.length === 0) {
-			if (typeof showToast === 'function') showToast('Enter meeting code', 3000, 'error');
 			return;
 		}
 
@@ -191,7 +215,7 @@ function Home() {
 						Huddle
 					</Link>
 				</div>
-				<div className="flex gap-4 md:gap-8 items-center text-white/90 flex-wrap md:flex-nowrap">
+				<div className="flex gap-4  md:gap-8 items-center text-white/90 flex-wrap md:flex-nowrap">
 					<button className="transition-colors hover:text-cyan-200 text-sm md:text-base"
 						onClick={() => navigate('/history')}>
 						<i className="fa-solid fa-clock-rotate-left"></i>
@@ -288,11 +312,10 @@ function Home() {
 										wrapperClassName=""
 										inputClassName={meetingCode.trim() ? "pr-10" : ""}
 									/>
-									{/* Live status icon inside input */}
 									{meetingCode.trim() && (
 										<span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
-											{isChecking
-												? <i className="fa-solid fa-spinner fa-spin text-slate-400 text-sm"></i>
+											{isChecking 
+												? <Loader type="ring" size={18} speed={2} color={"oklch(70.4% 0.04 256.788)"} />
 												: isAvailable === true
 													? <i className="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
 													: isAvailable === false

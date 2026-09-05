@@ -3,6 +3,8 @@ import axios from "axios";
 import httpStatus from "http-status";
 import { createContext, useState } from "react";
 import { useNavigate , useLocation} from "react-router-dom";
+import {toast} from "robot-toast";
+import {shock, success, error as errorRobot, wave, validation2} from "robot-toast/robots";
 
 const backendHost = import.meta.env.VITE_BACKEND_HOST || window.location.hostname;
 const backendPort = import.meta.env.VITE_BACKEND_PORT || "5000";
@@ -18,7 +20,7 @@ const client = axios.create({
 client.interceptors.request.use((config) => {
     const token = localStorage.getItem("token");
     if(token){
-        config.headers.Authorization = `Bearer ${token}`;
+        config.headers.set("Authorization", `Bearer ${token}`);
     }
     return config;
 });
@@ -44,12 +46,6 @@ export const AuthProvider = ({ children }) => {
 
     const [isSignup, setIsSignup] = React.useState(false);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const [userData, setUserData] = useState(null);
-    const [error, setError] = React.useState("");
-    const [message, setMessage] = React.useState("");
-    const [open, setOpen] = React.useState(false);
-    const [toastDuration, setToastDuration] = React.useState(3000);
-    const [toastType, setToastType] = React.useState("success");
     const [name, setName] = React.useState("");
     const [username, setUsername] = React.useState("");
     const [password, setPassword] = React.useState("");
@@ -63,35 +59,24 @@ export const AuthProvider = ({ children }) => {
         navigate(from || "/home", {replace: true});
     }
 
-    const showToast = (toastMessage, duration = 3000, type = "success") => {
-        setMessage(toastMessage);
-        setToastDuration(duration);
-        setToastType(type);
-        setOpen(true);
-    };
-
     const handleRegister = async (name, username, password) => {
         let request = await client.post("/register", {
-            name,
-            username,
+            name: name.trim(),
+            username: username.trim(),
             password
         });
 
-        if (request.status === httpStatus.CREATED) {
-            return request.data.message;
-        }
+        return request.data.message;
     };
 
     const handleLogin = async (username, password) => {
-        let request = await client.post("/login", {
-            username,
+        const response = await client.post("/login", {
+            username: username.trim(),
             password
         });
 
-        if (request.status === httpStatus.OK) {
-            localStorage.setItem("token", request.data.token);
-            return request.data.message;
-        }
+        localStorage.setItem("token", response.data.token);
+        return response.data.message;
     };
 
 
@@ -104,23 +89,51 @@ export const AuthProvider = ({ children }) => {
                 try {
                     signupResult = await handleRegister(name, username, password);
                 } catch (err) {
-                    const message = err.response?.data?.message || "Something went wrong";
-                    showToast(message, 4000, "error");
+                    const message = err.response?.data?.message || (err.request ? "Unable to connect to the server." : "Something went wrong.");
+                    toast({
+                    message,
+                    position: "bottom-left",
+                    type: "info",
+                    theme: "dark",
+                    robotVariant: errorRobot,
+                    style: { color: "white", backgroundColor: "oklch(21% 0.034 264.665)", },
+                    autoClose: 3000,
+                    draggable: true,
+                    pauseOnHover: true
+                    });
                     console.error("Registration error:", message);
                     return;
                 }
     
                 try {
                     await handleLogin(username, password);
-                    showToast(signupResult, 3000, "success");
-                    setError("");
+                    toast({
+                    message: signupResult || "You're all set! Welcome to Huddle.",
+                    position: "bottom-left",
+                    type: "success",
+                    theme: "dark",
+                    robotVariant: shock,
+                    style: { color: "white", backgroundColor: "oklch(21% 0.034 264.665)", },
+                    autoClose: 3000,
+                    draggable: true,
+                    pauseOnHover: true
+                    });
                     setName("");
                     setUsername("");
                     setPassword("");
-                    setTimeout(() => redirectAfterAuth(), 500);
+                    redirectAfterAuth();
                 } catch (err) {
-                    showToast("Account created. Please log in.", 4000, "success");
-                    setError("");
+                    toast({
+                    message: "Account created. Please log in.",
+                    position: "bottom-left",
+                    type: "success",
+                    theme: "dark",
+                    robotVariant: shock,
+                    style: { color: "white", backgroundColor: "oklch(21% 0.034 264.665)", },
+                    autoClose: 4000,
+                    draggable: true,
+                    pauseOnHover: true
+                    });
                     setIsSignup(false);
                     setPassword("");
                     console.error("Post-signup login error:", err.response?.data?.message || err.message);
@@ -128,14 +141,37 @@ export const AuthProvider = ({ children }) => {
             } else {
                 try {
                     const result = await handleLogin(username, password);
-                    showToast(result, 3000, "success");
-                    setError("");
+                    toast({
+                    message: result || "👋Welcome back! Ready to connect",
+                    position: "bottom-left",
+                    type: "success",
+                    theme: "dark",
+                    robotVariant: success,
+                    style: { color: "white", backgroundColor: "oklch(21% 0.034 264.665)", },
+                    autoClose: 4000,
+                    draggable: true,
+                    pauseOnHover: true
+                    });
                     setUsername("");
                     setPassword("");
-                    setTimeout(() => redirectAfterAuth(), 500);
+                    redirectAfterAuth();
                 } catch (err) {
-                    const message = err.response?.data?.message || "Something went wrong";
-                    showToast(message, 4000, "error");
+                    const message = err.response?.data?.message ||  (err.request ? "Unable to connect to the server." : "Something went wrong.");
+                    console.log(err)
+                    console.log(err.response);
+                        toast({
+                            message,
+                            position: "bottom-left",
+                            type: "info",
+                            theme: "dark",
+                            robotVariant:  err.response?.status === 401 ?  errorRobot : validation2,
+                            style: { color: "white", backgroundColor: "oklch(21% 0.034 264.665)", },
+                            autoClose: 4000,
+                            draggable: true,
+                            pauseOnHover: true
+                        });
+                    
+                    
                     console.error("Login error:", message);
                 }
             }
@@ -164,7 +200,7 @@ export const AuthProvider = ({ children }) => {
             console.error("Logout error:", e);
         } finally {
             localStorage.removeItem("token");
-            navigate("/");
+            navigate("/", {replace: true});
         }
     }
 
@@ -184,18 +220,7 @@ export const AuthProvider = ({ children }) => {
         handleAuth,
         handleLogout,
         isSubmitting,
-        userData,
-        setUserData,
         error,
-        setError,
-        message,
-        setMessage,
-        open,
-        setOpen,
-        toastDuration,
-        toastType,
-        setToastType,
-        showToast,
         isSignup,
         setIsSignup,
         name,

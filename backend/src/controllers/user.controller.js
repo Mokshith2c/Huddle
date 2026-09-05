@@ -25,23 +25,23 @@ const login = async (req, res) => {
     try {
         const user = await User.findOne({ username });
         if (!user) {
-            return res.status(httpStatus.NOT_FOUND).json({ message: "User not found" });
+            return res.status(404).json({ message: "We couldn't find an account with those details." });
         }
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            return res.status(httpStatus.UNAUTHORIZED).json({
-                message: "Invalid password"
+            return res.status(401).json({
+                message: "Invalid username or password. Please try again."
             });
         }
         let token = generateToken(user);
 
         return res.status(httpStatus.OK).json({
             token: token,
-            message: "Login Successful"
+            message: "👋Welcome back! Ready to connect"
         });
     } catch (e) {
-        return res.status(500).json({ message: `Error: ${e.message}` });
+        return res.status(500).json({ message: "Something went wrong on our end. Please try again." });
     }
 }
 const register = async (req, res) => {
@@ -49,7 +49,7 @@ const register = async (req, res) => {
     try {
         const existingUser = await User.findOne({ username });
         if (existingUser) {
-            return res.status(httpStatus.CONFLICT).json({ message: "User already exists" })
+            return res.status(409).json({ message: "That username is already taken. Try another one." })
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -61,17 +61,17 @@ const register = async (req, res) => {
 
         await newUser.save();
         const token = generateToken(newUser);
-        res.status(httpStatus.CREATED).json({
+        res.status(201).json({
             token: token,
-            message: "User Registered Successfully"
+            message: "You're all set! Welcome to Huddle."
         });
     } catch (e) {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Error: ${e.message}` });
+        res.status(500).json({ message: "Something went wrong on our end. Please try again." });
     }
 }
 
 const logout = async (req, res) => {
-    res.status(httpStatus.OK).json({ message: "Logged out successfully" });
+    res.status(200).json({ message: "You've been logged out. See you soon!" });
 }
 
 const getUserHistory = async (req, res) => {
@@ -82,7 +82,7 @@ const getUserHistory = async (req, res) => {
             .lean();
         res.json(meetings);
     } catch (e) {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Error ${e.message}` });
+        res.status(500).json({ message: "Something went wrong on our end. Please try again." });
     }
 }
 
@@ -93,7 +93,7 @@ const addToHistory = async (req, res) => {
         const username = req.user.username;
         const normalizedMeetingCode = typeof meeting_code === "string" ? meeting_code.trim() : "";
         if (!normalizedMeetingCode) {
-            return res.status(httpStatus.BAD_REQUEST).json({ message: "meeting_code is required" });
+            return res.status(400).json({ message: "meeting code is required." });
         }
 
         const parsedDate = date ? new Date(date) : new Date();
@@ -104,9 +104,9 @@ const addToHistory = async (req, res) => {
             meetingCode: normalizedMeetingCode,
             date: meetingDate
         });
-        res.status(httpStatus.CREATED).json({ message: "Meeting Added to history" })
+        res.status(201).json({ message: "Meeting Added to history" })
     } catch (e) {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Error: ${e.message}` });
+        res.status(500).json({ message: "Something went wrong on our end. Please try again." });
     }
 };
 
@@ -132,11 +132,11 @@ const getMediaHistory = async (req, res) => {
             }
             groupedMedia[item.meetingCode].push(item);
         })
-        res.status(httpStatus.OK).json(groupedMedia);
+        res.status(200).json(groupedMedia);
     }
     catch (e) {
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-            message: `Error: ${e.message}`
+        res.status(500).json({
+            message: "Something went wrong on our end. Please try again."
         });
     }
 }
@@ -150,25 +150,25 @@ const updateMeetingTags = async (req, res) => {
         const meeting = await Meeting.findOne({ _id: id, username: username });
  
         if (!meeting) {
-            return res.status(httpStatus.NOT_FOUND).json({ message: "History entry not found" });
+            return res.status(404).json({ message: "History entry not found" });
         }
  
         meeting.tags = tags;
         await meeting.save();
  
-        res.status(httpStatus.OK).json({ message: "Tags updated", tags: meeting.tags });
+        res.status(200).json({ message: "Tags updated", tags: meeting.tags });
     } catch (e) {
         if (e.name === "CastError") {
-            return res.status(httpStatus.BAD_REQUEST).json({ message: "Invalid history entry id" });
+            return res.status(400).json({ message: "Invalid history entry id" });
         }
-        res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: `Error: ${e.message}` });
+        res.status(500).json({ message: "Something went wrong on our end. Please try again." });
     }
 };
 
 const checkRoom = (req, res) => {
     const code = req.params.code;
     if (!code || typeof code !== "string" || !code.trim()) {
-        return res.status(httpStatus.BAD_REQUEST).json({ message: "Meeting code is required" });
+        return res.status(400).json({ message: "Meeting code is required" });
     }
     res.set("Cache-Control", "no-store");
     const roomKey = code.trim();

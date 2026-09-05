@@ -2,9 +2,11 @@ import InputField from "./InputField";
 import * as React from "react"
 import { AuthContext } from "../contexts/AuthContext";
 import { useContext, useState } from "react";
-
+import { toast } from 'robot-toast';
+import { shock, error as errorRobot } from 'robot-toast/robots';
+import Loader from "../components/Loader.jsx"
 const SignInForm = () => {
-  const { username, setUsername, password, setPassword, handleAuth, showToast , isSubmitting} = useContext(AuthContext);
+  const { username, setUsername, password, setPassword, handleAuth, isSubmitting} = useContext(AuthContext);
   const [validationErrors, setValidationErrors] = useState({});
 
   const validateForm = () => {
@@ -29,8 +31,18 @@ const SignInForm = () => {
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
-      const firstError = Object.values(errors)[0];
-      showToast(firstError, 3000, "error");
+      const firstError = Object.values(errors)[0] || "Something went wrong";
+      toast({
+        message: firstError,
+        position: "bottom-left",
+        type: "info",
+        theme: "dark",
+        robotVariant: errorRobot,
+        style: { color: "white", backgroundColor: "oklch(21% 0.034 264.665)", },
+        autoClose: 3000,
+        draggable: true,
+        pauseOnHover: true
+      });
       return;
     }
     setValidationErrors({});
@@ -53,7 +65,7 @@ const SignInForm = () => {
       <button type="button" className="w-full py-3 rounded-lg bg-linear-to-r from-sky-600 to-cyan-500 text-white font-medium text-sm hover:from-sky-500 hover:to-cyan-400 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(14,165,233,0.28)] active:translate-y-0 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none flex items-center justify-center gap-2"
       onClick={handleSignIn}
       disabled={isSubmitting}>
-        {isSubmitting && <i className="fa-solid fa-spinner fa-spin"></i>}
+        {isSubmitting && <Loader type="ring" size={18} speed={2} color={"white"} />}
         {isSubmitting ? "Signing in..." : "Sign In"}
       </button>
     </div>

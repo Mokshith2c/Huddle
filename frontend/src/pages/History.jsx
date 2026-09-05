@@ -3,10 +3,13 @@ import { Link } from "react-router-dom";
 import { AuthContext } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import withAuth from '../utils/withAuth';
+import Loader from "../components/Loader";
 import "./History.css";
+import { toast } from 'robot-toast';
+import { shock, error as errorRobot, validation2 } from 'robot-toast/robots';
 
 function History() {
-    const { getHistoryOfUser, getMediaHistory, handleLogout, updateMeetingTags, showToast} = useContext(AuthContext);
+    const { getHistoryOfUser, getMediaHistory, handleLogout, updateMeetingTags} = useContext(AuthContext);
     const [meetings, setMeetings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -40,12 +43,32 @@ function History() {
             return;
         }
         if (currentTags.length >= 10) {
-            showToast('Up to 10 tags per meeting', 3000, 'error');
+            toast({
+                message: 'Up to only 10 tags per meeting allowed',
+                position: "bottom-left",
+                type: "info",
+                theme: "dark",
+                robotVariant: validation2,
+                style: { color: "white", backgroundColor: "oklch(21% 0.034 264.665)", },
+                autoClose: 3500,
+                draggable: true,
+                pauseOnHover: true
+            });
             return;
         }
         if(draft.length > 24){
             setTagDrafts((prev) => ({ ...prev, [meetingId]: '' }));
-            showToast('Tags length must be less than 25 characters', 3000, 'error');
+            toast({
+                message: 'Tags length must be less than 25 characters',
+                position: "bottom-left",
+                type: "info",
+                theme: "dark",
+                robotVariant: validation2,
+                style: { color: "white", backgroundColor: "oklch(21% 0.034 264.665)", },
+                autoClose: 3500,
+                draggable: true,
+                pauseOnHover: true
+            });
             return;
         }
         const nextTags = [...currentTags, draft];
@@ -57,7 +80,17 @@ function History() {
         } catch (err) {
             setMeetings((prev) => prev.map((m) => (m._id === meetingId ? { ...m, tags: currentTags } : m)));
             const message = err.response?.data?.message || 'Failed to add tag';
-            showToast(message, 3000, 'error');
+            toast({
+                message,
+                position: "bottom-left",
+                type: "info",
+                theme: "dark",
+                robotVariant: errorRobot,
+                style: { color: "white", backgroundColor: "oklch(21% 0.034 264.665)", },
+                autoClose: 3500,
+                draggable: true,
+                pauseOnHover: true
+            });
         }
     };
 
@@ -73,7 +106,17 @@ function History() {
         } catch (err) {
             setMeetings((prev) => prev.map((m) => (m._id === meetingId ? { ...m, tags: currentTags } : m)));
             const message = err.response?.data?.message || 'Failed to remove tag';
-            showToast(message, 3000, 'error');
+            toast({
+                message,
+                position: "bottom-left",
+                type: "info",
+                theme: "dark",
+                robotVariant: errorRobot,
+                style: { color: "white", backgroundColor: "oklch(21% 0.034 264.665)", },
+                autoClose: 3500,
+                draggable: true,
+                pauseOnHover: true
+            });
         }
     };
 
@@ -145,10 +188,10 @@ function History() {
                     <div className="max-w-xl rounded-2xl border border-slate-400/20 bg-slate-900/60 p-6 text-white shadow-[0_10px_32px_rgba(2,6,23,0.35)] backdrop-blur-xs">
                         <p className='text-lg md:text-xl font-semibold'>Meeting History</p>
  
-                        {loading && (
-                            <p className='mt-4 text-white/70 text-sm md:text-base'>Loading your meeting history...</p>
+                        {loading&& (
+                            <p className='mt-4 text-white/70 text-sm md:text-base'>Loading your meeting history... </p>
                         )}
- 
+                    
                         {!loading && error && (
                             <p className='mt-4 text-red-300 text-sm md:text-base'>{error}</p>
                         )}
