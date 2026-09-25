@@ -270,7 +270,7 @@ function Home() {
 				<img
 					src="/home.svg"
 					alt="app preview"
-					className="w-75 mt-10 md:w-100 lg:w-120 drop-shadow-2xl self-center"
+					className="w-75 mt-8 mb-8 md:w-100 lg:w-120 drop-shadow-2xl self-center"
 				/>
 			</div>
 

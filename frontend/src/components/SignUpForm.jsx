@@ -3,7 +3,7 @@ import { AuthContext } from "../contexts/AuthContext";
 import InputField from "./InputField";
 import * as React from "react";
 import { toast } from 'robot-toast';
-import { shock, error as errorRobot } from 'robot-toast/robots';
+import { shock, search, error as errorRobot } from 'robot-toast/robots';
 import Loader from "../components/Loader"
 
 const SignUpForm = () => {
@@ -45,7 +45,7 @@ const SignUpForm = () => {
         position: "bottom-left",
         type: "info",
         theme: "dark",
-        robotVariant: errorRobot,
+        robotVariant: search,
         style: { color: "white", backgroundColor: "oklch(21% 0.034 264.665)", },
         autoClose: 3000,
         draggable: true,

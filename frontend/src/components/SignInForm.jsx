@@ -3,7 +3,7 @@ import * as React from "react"
 import { AuthContext } from "../contexts/AuthContext";
 import { useContext, useState } from "react";
 import { toast } from 'robot-toast';
-import { shock, error as errorRobot } from 'robot-toast/robots';
+import { shock, search, error as errorRobot } from 'robot-toast/robots';
 import Loader from "../components/Loader.jsx"
 const SignInForm = () => {
   const { username, setUsername, password, setPassword, handleAuth, isSubmitting} = useContext(AuthContext);
@@ -37,7 +37,7 @@ const SignInForm = () => {
         position: "bottom-left",
         type: "info",
         theme: "dark",
-        robotVariant: errorRobot,
+        robotVariant: search,
         style: { color: "white", backgroundColor: "oklch(21% 0.034 264.665)", },
         autoClose: 3000,
         draggable: true,
